@@ -1,0 +1,160 @@
+name: aurbuilder
+help: A helper to install packages from aur logged in as root using yay or makepkg (This uses mold as linker instead of ld)
+version: 1.0.0
+
+commands:
+  - name: install
+    alias: i
+    private: false
+    help: Install package(s) from AUR
+    group: Install
+    dependencies:
+      git: $(missing_dependencie git)
+      mold: $(missing_dependencie mold)
+      pacman:
+
+    args:
+      - name: package
+        required: true
+        repeatable: true
+        unique: true
+        validate: package_exists
+        help: One or more packages to install
+
+    flags:
+      - long: --noconfirm
+        short: -y
+        private: false
+        required: false
+        help: Do not prompt for confirmation
+
+      - long: --installer
+        short: -i
+        private: false
+        required: false
+        arg: INSTALLER
+        allowed:
+          - yay
+          - makepkg
+        help: The package installer to use
+
+      - long: --makeflags
+        short: -m
+        private: false
+        required: false
+        arg: MAKEFLAGS
+        help: Make flags to use when installing packages
+
+      - long: --build-dir
+        short: -b
+        private: false
+        required: false
+        arg: BUILDDIR
+        help: The build directory to use
+
+    environment_variables:
+      - name: NOCONFIRM
+        private: false
+        required: false
+        default: "false"
+        allowed:
+          - "true"
+          - "false"
+        help: Do not prompt for confirmation
+
+      - name: INSTALLER
+        private: false
+        required: false
+        default: yay
+        allowed:
+          - yay
+          - makepkg
+        help: The package installer to use
+
+      - name: MAKEFLAGS
+        private: false
+        required: false
+        default: --jobs=$(nproc)
+        help: Make flags to use when installing packages
+
+      - name: BUILDDIR
+        private: false
+        required: false
+        default: $AB_USER_HOME/build-$AB_TMP_NUMBER
+        help: The build directory to use (The number $(magenta $AB_TMP_NUMBER) is randomly generated at each run)
+
+      - name: AURDEST
+        private: true
+        required: false
+        default: $BUILDDIR
+        help: Same as BUILDDIR, but used by Yay
+
+  - name: self
+    alias: s
+    private: false
+    help: Performs $AB_USER_NAME management operations
+    group: Self
+
+    commands:
+      - name: create
+        alias: c
+        private: false
+        help: Create and setup $AB_USER_NAME user settings
+        group: Self
+
+      - name: remove
+        alias: r
+        private: false
+        help: Removes $AB_USER_NAME user and settings
+        group: Self
+
+      - name: uninstall
+        alias: u
+        private: false
+        help: Uninstall $AB_USER_NAME permanently
+        group: Self
+
+flags:
+  - long: --chroot
+    private: false
+    required: false
+    arg: CHROOT
+    validate: dir_exists
+    help: The chroot directory to use (Useful to use in arch linux installation environment)
+
+environment_variables:
+  - name: AB_USER_NAME
+    private: true
+    required: false
+    default: aurbuilder
+    help: The name of the user to use for the build process
+
+  - name: AB_USER_GROUP
+    private: true
+    required: false
+    default: $AB_USER_NAME
+    help: The name of the group to use for the build process
+
+  - name: AB_USER_HOME
+    private: true
+    required: false
+    default: /tmp/$AB_USER_NAME
+    help: The home directory to use for the build process
+
+  - name: AB_USER_SUDOERS
+    private: true
+    required: false
+    default: /etc/sudoers.d/$AB_USER_NAME
+    help: The sudoers file to use for setup $AB_PKGNAME user
+
+  - name: AB_TMP_NUMBER
+    private: true
+    required: false
+    default: $$
+    help: A temporary number to use in the BUILDDIR
+
+  - name: CHROOT
+    private: false
+    required: false
+    default: /
+    help: The chroot directory to use (Useful to use in arch linux installation environment)
