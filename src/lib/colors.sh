@@ -1,5 +1,5 @@
 color() {
-	local style color text
+	local style color separator text words
 
 	style=0
 	color=37
@@ -39,7 +39,9 @@ color() {
 			color=36
 			;;
 		*)
-			text+=("$1")
+			# split strings into separated words
+			eval "words=(\"${1:-}\")"
+			text+=("${words[@]}")
 			;;
 		esac
 		shift
@@ -48,7 +50,6 @@ color() {
 	if [[ "$color" =~ ^[0-9]+$ ]]; then
 		for word in "${text[@]}"; do
 			printf "\033[${style};${color}m%s\033[0m" "$word"
-
 			if [[ "$word" != "${text[-1]}" ]]; then
 				printf "%s" "$separator"
 			else
