@@ -1,0 +1,6 @@
+remote_theme: pages-themes/hacker@v0.2.0
+plugins:
+  - jekyll-remote-theme
+title: AUR Builder
+description: A helper to install packages from aur logged in as root using yay or makepkg
+show_downloads: false
