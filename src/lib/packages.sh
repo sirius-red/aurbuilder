@@ -6,14 +6,6 @@ missing_dependencie() {
 	echo "Install with $(green_bold pacman) $(blue -S) $(magenta "$1")"
 }
 
-list_packages() {
-	local separator=$1
-	shift
-	local packages=("$@")
-
-	color --bold --yellow --separator "$separator" "${packages[@]}"
-}
-
 install_with_makepkg() {
 	local options
 
@@ -77,7 +69,7 @@ install_packages() {
 		install="install_with_makepkg"
 	fi
 
-	echo "Installing packages with $(green_bold "$INSTALLER"): $(list_packages ", " "${packages[@]}")"
+	echo "Installing packages with $(green_bold "$INSTALLER"): $(magenta_bold ", " "${packages[@]}")"
 	echo
 	echo "$(cyan_bold MAKEFLAGS)=$(blue_bold "$MAKEFLAGS")"
 	echo "$(cyan_bold BUILDDIR)=$(blue_bold "$BUILDDIR")"
