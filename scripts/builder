@@ -25,6 +25,19 @@ make_release() {
 	zip -9 -r "$dist_file" "$built_file"
 }
 
+install() {
+	local built_file install_dir
+
+	built_file=$1
+	install_dir=$2
+
+	need git
+	need mold
+	install_dependencies
+
+	sudo cp -f "$built_file" "$install_dir"
+}
+
 show_help() {
 	cat <<EOF
 
@@ -71,6 +84,15 @@ $(bold Options:)
 	Allowed: $(yellow -S " | " development production)
 	Default: $(magenta development)
 
+  $(blue -S ", " "--install")
+	Install the built bundle. Required if using --installdir
+	Default: $(magenta false)
+	NOTE: This will also install dependencies
+
+  $(blue -S ", " "--installdir") $(yellow "<dir>")
+	Directory to install the bundle
+	Default: $(magenta /usr/bin)
+
   $(blue -S ", " "--dry-run")
 	Dry run without actually building the release
 	Default: $(magenta false)
@@ -92,7 +114,7 @@ parse_args() {
 	while test $# -gt 0; do
 		case $1 in
 		-s | --settings)
-			file_exists "$2" || throw "Settings file not found: $2" echo
+			file_exists "$2" || throw "Settings file not found: $(magenta_bold "$2")" echo
 			settings_file=$2
 			shift
 			;;
@@ -119,8 +141,22 @@ parse_args() {
 			ENV="production"
 			;;
 		--env)
-			[[ "$2" =~ development|production ]] || throw "Invalid environment: $(magenta_bold "$2")" show_help
+			[[ "$2" =~ development|production ]] || {
+				error "Invalid environment: $(magenta_bold "$2")"
+				throw "Allowed values: $(yellow_bold -S " | " "development production")" echo
+			}
 			ENV=$2
+			shift
+			;;
+		--install)
+			to_install=true
+			;;
+		--installdir)
+			[[ "$*" =~ --install ]] || {
+				throw "$(blue_bold "--installdir") deve ser usado com a flag $(blue_bold "--install")" echo
+			}
+			dir_exists "$2" || throw "Install directory not found: $(magenta_bold "$2")" echo
+			install_dir=$2
 			shift
 			;;
 		--dry-run)
@@ -158,6 +194,10 @@ init() {
 	settings_file='./settings.yml'
 	dist_ext='zip'
 	env_version=
+
+	# install options
+	to_install=
+	install_dir='/usr/bin'
 
 	# bashly options
 	upgrade=
@@ -207,6 +247,18 @@ run() {
 	print
 
 	dry_run || make_release "$built_file" "$dist_dir" "$dist_file"
+
+	if [ "$to_install" = true ]; then
+		print
+		noconfirm || confirm "Proceed with installation?" || exit
+
+		print
+		print "Installing $(green_bold "$name (v${version})") release..."
+		print "Install directory: $(blue_bold "$install_dir")"
+		print
+
+		dry_run || install "$built_file" "$install_dir"
+	fi
 }
 
 if init "$@" && run; then

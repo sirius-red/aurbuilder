@@ -116,6 +116,10 @@ dry_run() {
 	[[ "$dry_run" = true ]]
 }
 
+noconfirm() {
+	[[ "$noconfirm" = true ]]
+}
+
 dir_exists() {
 	[[ -d "$1" ]]
 }
