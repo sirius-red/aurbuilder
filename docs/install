@@ -94,6 +94,10 @@ magenta_underlined() { color --magenta --underlined "$@"; }
 cyan_underlined() { color --cyan --underlined "$@"; }
 
 confirm() {
+    if ! [[ -t 1 ]]; then
+        return 0
+    fi
+
     while true; do
         read -r -p "$* [$(green Y)/$(red n)]: " yn
         case $yn in
