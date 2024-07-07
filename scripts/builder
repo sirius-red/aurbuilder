@@ -1,0 +1,218 @@
+#!/usr/bin/env bash
+
+make_bundle() {
+	local name version build_dir options
+	name=$1
+	version=$2
+	build_dir=$3
+	shift 3
+	options=("$@")
+
+	dir_exists "$build_dir" && rm -rf "$build_dir"
+	mkdir -p "$build_dir"
+	bashly generate "${options[@]}"
+}
+
+make_release() {
+	local built_file dist_dir dist_file
+
+	built_file=$1
+	dist_dir=$2
+	dist_file=$3
+
+	dir_exists "$dist_dir" && rm -rf "$dist_dir"
+	mkdir -p "$dist_dir"
+	zip -9 -r "$dist_file" "$built_file"
+}
+
+show_help() {
+	cat <<EOF
+
+$(bold Usage:)
+  $(green_bold "$0") [$(blue options)]
+	Run from project root
+
+$(bold Options:)
+  $(blue -S ", " "-s --settings") $(yellow "<file>")
+	Path to settings file
+	Default: $(magenta ./settings.yml)
+
+  $(blue -S ", " "-e --dist-ext") $(yellow "<ext>")
+	Distribution file extension
+	Default: $(magenta zip)
+
+  $(blue -S ", " "-u --upgrade")
+	Upgrade bashly libs
+	Default: $(magenta false)
+
+  $(blue -S ", " "-w --watch")
+	Watch for file changes (only in the bundle process)
+	Default: $(magenta false)
+
+  $(blue -S ", " "-y --noconfirm")
+	Don't ask for confirmation
+	Default: $(magenta false)
+
+  $(blue -S ", " "-q --quiet")
+	Quiet mode (no output)
+	Default: $(magenta false)
+	NOTE: This will still print errors if any occur
+
+  $(blue -S ", " "-d --dev --development")
+	Same as '--env development'
+	Default: $(magenta true)
+
+  $(blue -S ", " "-p --prod --production")
+	Same as '--env production'
+	Default: $(magenta false)
+
+  $(blue -S ", " "--env") $(yellow "<environment>")
+	Environment to use
+	Allowed: $(yellow -S " | " development production)
+	Default: $(magenta development)
+
+  $(blue -S ", " "--dry-run")
+	Dry run without actually building the release
+	Default: $(magenta false)
+
+  $(blue -S ", " "-h --help")
+	Show this help message and exit
+
+$(bold Examples:)
+  $(green_bold "$0") $(blue -S ", " "-s") $(yellow "path/to/custom_settings.yml")
+	Build a development release with a custom settings file
+
+  $(green_bold "$0") $(blue -S ", " "-p -y")
+	Build a production release without prompting for confirmation
+
+EOF
+}
+
+parse_args() {
+	while test $# -gt 0; do
+		case $1 in
+		-s | --settings)
+			file_exists "$2" || throw "Settings file not found: $2" echo
+			settings_file=$2
+			shift
+			;;
+		-e | --dist-ext)
+			dist_ext=$2
+			shift
+			;;
+		-u | --upgrade)
+			upgrade=true
+			;;
+		-w | --watch)
+			watch_mode=true
+			;;
+		-y | --noconfirm)
+			noconfirm=true
+			;;
+		-q | --quiet)
+			quiet=true
+			;;
+		-d | --dev | --development)
+			ENV="development"
+			;;
+		-p | --prod | --production)
+			ENV="production"
+			;;
+		--env)
+			[[ "$2" =~ development|production ]] || throw "Invalid environment: $(magenta_bold "$2")" show_help
+			ENV=$2
+			shift
+			;;
+		--dry-run)
+			dry_run=true
+			;;
+		-h | --help)
+			show_help
+			exit
+			;;
+		*)
+			echo
+			throw "Invalid flag: $1" show_help
+			;;
+		esac
+		shift
+	done
+
+	if [ "$ENV" = "development" ]; then
+		env_version="-dev"
+	fi
+}
+
+init() {
+	#shellcheck source=utils
+	source scripts/utils
+
+	set -e
+	clear
+
+	need zip
+	need ruby
+	install_dependencies
+
+	# build options
+	settings_file='./settings.yml'
+	dist_ext='zip'
+	env_version=
+
+	# bashly options
+	upgrade=
+	watch_mode=
+
+	# environment variables
+	ENV=${ENV:-'development'}
+
+	parse_args "$@"
+}
+
+run() {
+	local settings_info project_info name version build_dir built_file dist_dir dist_file bashly_options
+
+	settings_info=$(tr -d '"' <"$settings_file")
+	project_info=$(tr -d '"' <"$(extract_value "$settings_info" "config_path:" " ")")
+
+	name=$(extract_value "$project_info" "name:" " ")
+	version="v$(extract_value "$project_info" "version:" " ")${env_version}"
+	build_dir=$(extract_value "$settings_info" "target_dir:" " ")
+	built_file="${build_dir}/${name}"
+	dist_dir="${build_dir}/dist"
+	dist_file="${dist_dir}/${name}-${version}.${dist_ext}"
+
+	bashly_options=(
+		"--env"
+		"$ENV"
+		${watch_mode:+'--watch'}
+		${upgrade:+'--upgrade'}
+	)
+
+	print
+	print "Environment: $(cyan_bold "$(upper "$ENV")")"
+
+	print
+	print "Building $(green_bold "$name (v${version})") $ENV bundle..."
+	print "Built file: $(blue_bold "$built_file")"
+	print "Options: $(blue_bold "${bashly_options[*]}")"
+	print
+
+	dry_run || make_bundle "$name" "$version" "$build_dir" "${bashly_options[@]}"
+
+	print
+	print "Making release for $(green_bold "$name (v${version})")..."
+	print "Built file: $(blue_bold "$built_file")"
+	print "Dist file: $(blue_bold "$dist_file")"
+	print
+
+	dry_run || make_release "$built_file" "$dist_dir" "$dist_file"
+}
+
+if init "$@" && run; then
+	green_bold "Done!"
+else
+	red_bold "An error occurred!"
+fi
+
+print

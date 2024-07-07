@@ -1,0 +1,265 @@
+# shellcheck disable=SC2148
+export dependencies
+export dev_dependencies
+export noconfirm
+export quiet
+export dry_run
+export rmdeps
+
+color() {
+	local style color separator text words
+
+	style=0
+	color=37
+	separator=" "
+
+	while test $# -gt 0; do
+		case $1 in
+		-L | --light)
+			style=2
+			;;
+		-B | --bold)
+			style=1
+			;;
+		-U | --underlined)
+			style=4
+			;;
+		-S | --separator)
+			separator="$2"
+			shift
+			;;
+		-r | --red)
+			color=31
+			;;
+		-g | --green)
+			color=32
+			;;
+		-y | --yellow)
+			color=33
+			;;
+		-b | --blue)
+			color=34
+			;;
+		-m | --magenta)
+			color=35
+			;;
+		-c | --cyan)
+			color=36
+			;;
+		*)
+			# split strings into separated words
+			eval "words=(\"${1:-}\")"
+			text+=("${words[@]}")
+			;;
+		esac
+		shift
+	done
+
+	if [[ "$color" =~ ^[0-9]+$ ]]; then
+		for word in "${text[@]}"; do
+			printf "\033[${style};${color}m%s\033[0m" "$word"
+			if [[ "$word" != "${text[-1]}" ]]; then
+				printf "%s" "$separator"
+			else
+				printf "\n"
+			fi
+		done
+	else
+		color --bold --red "Invalid color code: $color"
+	fi
+}
+
+red() { color --red "$@"; }
+green() { color --green "$@"; }
+yellow() { color --yellow "$@"; }
+blue() { color --blue "$@"; }
+magenta() { color --magenta "$@"; }
+cyan() { color --cyan "$@"; }
+light() { color --light "$@"; }
+bold() { color --bold "$@"; }
+underlined() { color --underlined "$@"; }
+red_light() { color --red --light "$@"; }
+green_light() { color --green --light "$@"; }
+yellow_light() { color --yellow --light "$@"; }
+blue_light() { color --blue --light "$@"; }
+magenta_light() { color --magenta --light "$@"; }
+cyan_light() { color --cyan --light "$@"; }
+red_bold() { color --red --bold "$@"; }
+green_bold() { color --green --bold "$@"; }
+yellow_bold() { color --yellow --bold "$@"; }
+blue_bold() { color --blue --bold "$@"; }
+magenta_bold() { color --magenta --bold "$@"; }
+cyan_bold() { color --cyan --bold "$@"; }
+red_underlined() { color --red --underlined "$@"; }
+green_underlined() { color --green --underlined "$@"; }
+yellow_underlined() { color --yellow --underlined "$@"; }
+blue_underlined() { color --blue --underlined "$@"; }
+magenta_underlined() { color --magenta --underlined "$@"; }
+cyan_underlined() { color --cyan --underlined "$@"; }
+
+confirm() {
+	while true; do
+		read -r -p "$* [$(green Y)/$(red n)]: " yn
+		case $yn in
+		[Yy]*)
+			echo
+			return 0
+			;;
+		[Nn]*)
+			echo
+			return 1
+			;;
+		esac
+	done
+}
+
+dry_run() {
+	[[ "$dry_run" = true ]]
+}
+
+dir_exists() {
+	[[ -d "$1" ]]
+}
+
+file_exists() {
+	[[ -f "$1" ]]
+}
+
+is_semver() {
+	[[ "$1" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+}
+
+is_valid_tag() {
+	is_semver "$1" || [ "$1" = "latest" ] || [[ "$1" =~ -dev$ ]]
+}
+
+is_installed() {
+	command -v "$1" &>/dev/null || pacman -Qi "$1" &>/dev/null
+}
+
+func_exists() {
+	type "$1" &>/dev/null
+}
+
+print() {
+	[[ "$quiet" != true ]] && echo "$@"
+}
+
+upper() {
+	printf '%s' "${1^^}"
+}
+
+error() {
+	red_bold "[ERROR] $*" >&2
+}
+
+throw() {
+	local text callback
+
+	if func_exists "${*: -1}"; then
+		text="${*:1:$#-1}"
+		callback="${*: -1}"
+	else
+		text="$*"
+	fi
+
+	error "$text"
+	$callback
+	exit 1
+}
+
+need() {
+	if [ "$1" = "-b" ]; then
+		is_installed "$2" || {
+			dependencies+=("$2")
+			dev_dependencies+=("$2")
+		}
+	else
+		is_installed "$1" || dependencies+=("$1")
+	fi
+}
+
+install_dependencies() {
+	local install
+
+	if [ -n "${dependencies[*]}" ]; then
+		install="sudo pacman -S --needed --asdeps"
+
+		printf "Missing dependencies: "
+		magenta_bold -S ", " "${dependencies[@]}"
+
+		if [ "$noconfirm" = true ]; then
+			install+=" --noconfirm"
+			echo "Proceeding with installation due to --noconfirm flag..."
+		else
+			confirm "Proceed with installation?" || exit 1
+		fi
+
+		$install "${dependencies[@]}"
+	fi
+}
+
+remove_dependencies() {
+	local deps_to_remove
+
+	usage() {
+		echo
+		echo "Usage: $(green_bold remove_dependencies) $(blue "[option]")"
+		echo
+		echo "Options:"
+		echo "  $(blue -S ", " "-p --prod --production")     Remove production dependencies"
+		echo "  $(blue -S ", " "-d --dev --development")     Remove development dependencies"
+		echo "  $(blue -S ", " "-a --all")                   Remove all dependencies"
+		echo
+	}
+
+	if [ -n "$1" ]; then
+		usage
+		error "Missing arguments in remove_dependencies()"
+	fi
+
+	case $1 in
+	-p | --prod | --production)
+		deps_to_remove=("${dependencies[@]}")
+		;;
+	-d | --dev | --development)
+		deps_to_remove=("${dev_dependencies[@]}")
+		;;
+	-a | --all)
+		deps_to_remove=("${dependencies[@]}" "${dev_dependencies[@]}")
+		;;
+	*)
+		echo "Invalid option: $1"
+		usage
+		exit 1
+		;;
+	esac
+
+	if [ -n "${deps_to_remove[*]}" ]; then
+		local remove
+
+		remove="sudo pacman -Rns"
+
+		printf "Removing dependencies: "
+		magenta_bold -S ", " "${deps_to_remove[@]}"
+
+		if [ "$noconfirm" = true ]; then
+			remove+=" --noconfirm"
+			echo "Proceeding with removal due to --noconfirm flag..."
+		else
+			confirm "Proceed with removal dependencies?" || exit 1
+		fi
+
+		$remove "${deps_to_remove[@]}"
+	fi
+}
+
+extract_value() {
+	local content query splitter
+
+	content=$1
+	query=$2
+	splitter=$3
+
+	echo "$content" | grep "${query}" | cut -d "$splitter" -f2
+}
