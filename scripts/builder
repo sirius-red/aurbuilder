@@ -22,7 +22,7 @@ make_release() {
 
 	dir_exists "$dist_dir" && rm -rf "$dist_dir"
 	mkdir -p "$dist_dir"
-	zip -9 -r "$dist_file" "$built_file"
+	zip -9 -j "$dist_file" "$built_file"
 }
 
 install() {
