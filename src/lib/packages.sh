@@ -10,17 +10,22 @@ list_packages() {
 	local separator=$1
 	shift
 	local packages=("$@")
+
 	color --bold --yellow --separator "$separator" "${packages[@]}"
 }
 
 install_with_makepkg() {
-	local options=(
+	local options
+
+	options=(
 		--needed
 		--syncdeps
 		--rmdeps
 		--install
 	)
+
 	[ "$NOCONFIRM" = true ] && options+=("--noconfirm")
+
 	for pkg in "$@"; do
 		local workdir="${BUILDDIR}/${pkg}"
 		git clone "https://aur.archlinux.org/${pkg}.git" --depth 1 "$workdir"
@@ -31,11 +36,14 @@ install_with_makepkg() {
 }
 
 install_with_yay() {
-	local options=(
+	local options
+
+	options=(
 		--needed
 		--removemake
 		--batchinstall
 	)
+
 	[ "$NOCONFIRM" = true ] && {
 		options+=(
 			--noconfirm
@@ -45,12 +53,15 @@ install_with_yay() {
 			"--answerupgrade N"
 		)
 	}
+
 	mold -run yay "${options[@]}" -S "$@"
 }
 
 install_packages() {
-	local packages=("$@")
-	local install="install_with_yay"
+	local packages install
+
+	packages=("$@")
+	install="install_with_yay"
 
 	mkdir -p "$BUILDDIR"
 	chown -R "${AB_USER_NAME}:${AB_USER_NAME}" "$BUILDDIR"
@@ -71,6 +82,8 @@ install_packages() {
 	echo "$(cyan_bold MAKEFLAGS)=$(blue_bold "$MAKEFLAGS")"
 	echo "$(cyan_bold BUILDDIR)=$(blue_bold "$BUILDDIR")"
 	echo
+
 	$install "${packages[@]}"
+
 	green_bold "Done!"
 }

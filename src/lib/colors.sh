@@ -1,25 +1,46 @@
 color() {
-	local style=0
-	local color=37
-	local separator=" "
-	local text
+	local style color text
+
+	style=0
+	color=37
+	separator=" "
 
 	while test $# -gt 0; do
 		case $1 in
-		-L | --light) style=2 ;;
-		-B | --bold) style=1 ;;
-		-U | --underlined) style=4 ;;
+		-L | --light)
+			style=2
+			;;
+		-B | --bold)
+			style=1
+			;;
+		-U | --underlined)
+			style=4
+			;;
 		-S | --separator)
 			separator="$2"
 			shift
 			;;
-		-r | --red) color=31 ;;
-		-g | --green) color=32 ;;
-		-y | --yellow) color=33 ;;
-		-b | --blue) color=34 ;;
-		-m | --magenta) color=35 ;;
-		-c | --cyan) color=36 ;;
-		*) text+=("$1") ;;
+		-r | --red)
+			color=31
+			;;
+		-g | --green)
+			color=32
+			;;
+		-y | --yellow)
+			color=33
+			;;
+		-b | --blue)
+			color=34
+			;;
+		-m | --magenta)
+			color=35
+			;;
+		-c | --cyan)
+			color=36
+			;;
+		*)
+			text+=("$1")
+			;;
 		esac
 		shift
 	done
@@ -27,6 +48,7 @@ color() {
 	if [[ "$color" =~ ^[0-9]+$ ]]; then
 		for word in "${text[@]}"; do
 			printf "\033[${style};${color}m%s\033[0m" "$word"
+
 			if [[ "$word" != "${text[-1]}" ]]; then
 				printf "%s" "$separator"
 			else

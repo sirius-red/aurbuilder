@@ -1,7 +1,9 @@
 create_user() {
 	if ! id "$AB_USER_NAME" &>/dev/null; then
-		local password=$(tr </dev/urandom -dc 'a-zA-Z0-9' | head -c 16)
-		local credentials="${AB_USER_NAME}:${password}"
+		local password credentials
+
+		password=$(tr </dev/urandom -dc 'a-zA-Z0-9' | head -c 16)
+		credentials="${AB_USER_NAME}:${password}"
 
 		sudo useradd --system --user-group --no-create-home --home-dir "$AB_USER_HOME" --shell /usr/bin/nologin "$AB_USER_NAME"
 
