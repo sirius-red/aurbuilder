@@ -4,7 +4,7 @@ Install package(s) from AUR
 
 | Attributes       | &nbsp;
 |------------------|-------------
-| Alias:           | i
+| Alias:           | `i`
 
 ## Usage
 
@@ -14,17 +14,21 @@ aurbuilder install PACKAGE... [OPTIONS]
 
 ## Dependencies
 
+#### *arch-chroot*
+
+Install with `pacman -S arch-chroot`
+
 #### *git*
 
-$(missing_dependencie git)
+Install with `pacman -S git`
 
 #### *mold*
 
-$(missing_dependencie mold)
+Install with `pacman -S mold`
 
 #### *pacman*
 
-
+This package is installed with the base Arch Linux installation
 
 ## Environment Variables
 
@@ -34,7 +38,7 @@ Do not prompt for confirmation
 
 | Attributes      | &nbsp;
 |-----------------|-------------
-| Default Value:  | false
+| Default Value:  | `false`
 
 #### *INSTALLER*
 
@@ -42,7 +46,7 @@ The package installer to use
 
 | Attributes      | &nbsp;
 |-----------------|-------------
-| Default Value:  | yay
+| Default Value:  | `yay`
 
 #### *MAKEFLAGS*
 
@@ -50,15 +54,15 @@ Make flags to use when installing packages
 
 | Attributes      | &nbsp;
 |-----------------|-------------
-| Default Value:  | --jobs=$(nproc)
+| Default Value:  | `--jobs=$(nproc)`
 
 #### *BUILDDIR*
 
-The build directory to use (The number $(magenta $AB_TMP_NUMBER) is randomly generated at each run)
+The build directory to use (The number `$AB_TMP_NUMBER` is randomly generated at each run)
 
 | Attributes      | &nbsp;
 |-----------------|-------------
-| Default Value:  | $AB_USER_HOME/build-$AB_TMP_NUMBER
+| Default Value:  | `$AB_USER_HOME/build-$AB_TMP_NUMBER`
 
 ## Arguments
 
@@ -83,7 +87,7 @@ The package installer to use
 
 | Attributes      | &nbsp;
 |-----------------|-------------
-| Allowed Values: | yay, makepkg
+| Allowed Values: | `yay`, `makepkg`
 
 #### *--makeflags, -m MAKEFLAGS*
 

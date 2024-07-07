@@ -1,6 +1,6 @@
 # aurbuilder self remove
 
-Removes $AB_USER_NAME user and settings
+Removes aurbuilder user and settings
 
 | Attributes       | &nbsp;
 |------------------|-------------

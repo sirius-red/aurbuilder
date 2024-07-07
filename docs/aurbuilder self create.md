@@ -1,6 +1,6 @@
 # aurbuilder self create
 
-Create and setup $AB_USER_NAME user settings
+Create and setup aurbuilder user settings
 
 | Attributes       | &nbsp;
 |------------------|-------------

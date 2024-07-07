@@ -4,7 +4,7 @@ A helper to install packages from aur logged in as root using yay or makepkg (Th
 
 | Attributes       | &nbsp;
 |------------------|-------------
-| Version:         | 1.0.0
+| Version:         | 2.0.1
 
 ## Usage
 
@@ -20,7 +20,7 @@ The chroot directory to use (Useful to use in arch linux installation environmen
 
 | Attributes      | &nbsp;
 |-----------------|-------------
-| Default Value:  | /
+| Default Value:  | `/`
 
 ## Install Commands
 
@@ -28,7 +28,7 @@ The chroot directory to use (Useful to use in arch linux installation environmen
 
 ## Self Commands
 
-- [self](aurbuilder%20self) - Performs $AB_USER_NAME management operations
+- [self](aurbuilder%20self) - Performs aurbuilder management operations
 
 ## Options
 

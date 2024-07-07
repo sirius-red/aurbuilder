@@ -1,6 +1,6 @@
 # aurbuilder self
 
-Performs $AB_USER_NAME management operations
+Performs aurbuilder management operations
 
 | Attributes       | &nbsp;
 |------------------|-------------
@@ -14,8 +14,8 @@ aurbuilder self COMMAND
 
 ## Self Commands
 
-- [create](aurbuilder%20self%20create) - Create and setup $AB_USER_NAME user settings
-- [remove](aurbuilder%20self%20remove) - Removes $AB_USER_NAME user and settings
-- [uninstall](aurbuilder%20self%20uninstall) - Uninstall $AB_USER_NAME permanently
+- [create](aurbuilder%20self%20create) - Create and setup aurbuilder user settings
+- [remove](aurbuilder%20self%20remove) - Removes aurbuilder user and settings
+- [uninstall](aurbuilder%20self%20uninstall) - Uninstall aurbuilder permanently
 
 

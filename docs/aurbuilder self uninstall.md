@@ -1,6 +1,6 @@
 # aurbuilder self uninstall
 
-Uninstall $AB_USER_NAME permanently
+Uninstall aurbuilder permanently
 
 | Attributes       | &nbsp;
 |------------------|-------------
