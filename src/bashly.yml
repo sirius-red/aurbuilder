@@ -1,6 +1,6 @@
 name: aurbuilder
 help: A helper to install packages from aur logged in as root using yay or makepkg (This uses mold as linker instead of ld)
-version: 2.0.0
+version: 2.0.1
 
 commands:
   - name: install
@@ -9,6 +9,7 @@ commands:
     help: Install package(s) from AUR
     group: Install
     dependencies:
+      arch-chroot: $(missing_dependencie arch-chroot)
       git: $(missing_dependencie git)
       mold: $(missing_dependencie mold)
       pacman:
@@ -92,26 +93,26 @@ commands:
   - name: self
     alias: s
     private: false
-    help: Performs $AB_USER_NAME management operations
+    help: Performs aurbuilder management operations
     group: Self
 
     commands:
       - name: create
         alias: c
         private: false
-        help: Create and setup $AB_USER_NAME user settings
+        help: Create and setup aurbuilder user settings
         group: Self
 
       - name: remove
         alias: r
         private: false
-        help: Removes $AB_USER_NAME user and settings
+        help: Removes aurbuilder user and settings
         group: Self
 
       - name: uninstall
         alias: u
         private: false
-        help: Uninstall $AB_USER_NAME permanently
+        help: Uninstall aurbuilder permanently
         group: Self
 
 flags:
