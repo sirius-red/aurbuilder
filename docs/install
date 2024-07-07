@@ -1,0 +1,460 @@
+#!/usr/bin/env bash
+
+########## UTILS ##########
+
+color() {
+    local style color separator text words
+
+    style=0
+    color=37
+    separator=" "
+
+    while test $# -gt 0; do
+        case $1 in
+        -L | --light)
+            style=2
+            ;;
+        -B | --bold)
+            style=1
+            ;;
+        -U | --underlined)
+            style=4
+            ;;
+        -S | --separator)
+            separator="$2"
+            shift
+            ;;
+        -r | --red)
+            color=31
+            ;;
+        -g | --green)
+            color=32
+            ;;
+        -y | --yellow)
+            color=33
+            ;;
+        -b | --blue)
+            color=34
+            ;;
+        -m | --magenta)
+            color=35
+            ;;
+        -c | --cyan)
+            color=36
+            ;;
+        *)
+            # split strings into separated words
+            eval "words=(\"${1:-}\")"
+            text+=("${words[@]}")
+            ;;
+        esac
+        shift
+    done
+
+    if [[ "$color" =~ ^[0-9]+$ ]]; then
+        for word in "${text[@]}"; do
+            printf "\033[${style};${color}m%s\033[0m" "$word"
+            if [[ "$word" != "${text[-1]}" ]]; then
+                printf "%s" "$separator"
+            else
+                printf "\n"
+            fi
+        done
+    else
+        color --bold --red "Invalid color code: $color"
+    fi
+}
+
+red() { color --red "$@"; }
+green() { color --green "$@"; }
+yellow() { color --yellow "$@"; }
+blue() { color --blue "$@"; }
+magenta() { color --magenta "$@"; }
+cyan() { color --cyan "$@"; }
+light() { color --light "$@"; }
+bold() { color --bold "$@"; }
+underlined() { color --underlined "$@"; }
+red_light() { color --red --light "$@"; }
+green_light() { color --green --light "$@"; }
+yellow_light() { color --yellow --light "$@"; }
+blue_light() { color --blue --light "$@"; }
+magenta_light() { color --magenta --light "$@"; }
+cyan_light() { color --cyan --light "$@"; }
+red_bold() { color --red --bold "$@"; }
+green_bold() { color --green --bold "$@"; }
+yellow_bold() { color --yellow --bold "$@"; }
+blue_bold() { color --blue --bold "$@"; }
+magenta_bold() { color --magenta --bold "$@"; }
+cyan_bold() { color --cyan --bold "$@"; }
+red_underlined() { color --red --underlined "$@"; }
+green_underlined() { color --green --underlined "$@"; }
+yellow_underlined() { color --yellow --underlined "$@"; }
+blue_underlined() { color --blue --underlined "$@"; }
+magenta_underlined() { color --magenta --underlined "$@"; }
+cyan_underlined() { color --cyan --underlined "$@"; }
+
+confirm() {
+    while true; do
+        read -r -p "$* [$(green Y)/$(red n)]: " yn
+        case $yn in
+        [Yy]*)
+            echo
+            return 0
+            ;;
+        [Nn]*)
+            echo
+            return 1
+            ;;
+        esac
+    done
+}
+
+dry_run() {
+    [[ "$dry_run" = true ]]
+}
+
+noconfirm() {
+    [[ "$noconfirm" = true ]]
+}
+
+dir_exists() {
+    [[ -d "$1" ]]
+}
+
+file_exists() {
+    [[ -f "$1" ]]
+}
+
+is_semver() {
+    [[ "$1" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+}
+
+is_valid_tag() {
+    is_semver "$1" || [ "$1" = "latest" ] || [[ "$1" =~ -dev$ ]]
+}
+
+is_installed() {
+    command -v "$1" &>/dev/null || pacman -Qi "$1" &>/dev/null
+}
+
+func_exists() {
+    type "$1" &>/dev/null
+}
+
+print() {
+    [[ "$quiet" != true ]] && echo "$@"
+}
+
+upper() {
+    printf '%s' "${1^^}"
+}
+
+error() {
+    red_bold "[ERROR] $*" >&2
+}
+
+throw() {
+    local text callback
+
+    if func_exists "${*: -1}"; then
+        text="${*:1:$#-1}"
+        callback="${*: -1}"
+    else
+        text="$*"
+    fi
+
+    error "$text"
+    $callback
+    exit 1
+}
+
+need() {
+    if [ "$1" = "-b" ]; then
+        is_installed "$2" || {
+            dependencies+=("$2")
+            dev_dependencies+=("$2")
+        }
+    else
+        is_installed "$1" || dependencies+=("$1")
+    fi
+}
+
+install_dependencies() {
+    local install
+
+    if [ -n "${dependencies[*]}" ]; then
+        install="sudo pacman -S --needed --asdeps"
+
+        printf "Missing dependencies: "
+        magenta_bold -S ", " "${dependencies[@]}"
+
+        if [ "$noconfirm" = true ]; then
+            install+=" --noconfirm"
+            echo "Proceeding with installation due to --noconfirm flag..."
+        else
+            confirm "Proceed with installation?" || exit 1
+        fi
+
+        $install "${dependencies[@]}"
+    fi
+}
+
+remove_dependencies() {
+    local deps_to_remove
+
+    usage() {
+        echo
+        echo "Usage: $(green_bold remove_dependencies) $(blue "[option]")"
+        echo
+        echo "Options:"
+        echo "  $(blue -S ", " "-p --prod --production")     Remove production dependencies"
+        echo "  $(blue -S ", " "-d --dev --development")     Remove development dependencies"
+        echo "  $(blue -S ", " "-a --all")                   Remove all dependencies"
+        echo
+    }
+
+    if [ -n "$1" ]; then
+        usage
+        error "Missing arguments in remove_dependencies()"
+    fi
+
+    case $1 in
+    -p | --prod | --production)
+        deps_to_remove=("${dependencies[@]}")
+        ;;
+    -d | --dev | --development)
+        deps_to_remove=("${dev_dependencies[@]}")
+        ;;
+    -a | --all)
+        deps_to_remove=("${dependencies[@]}" "${dev_dependencies[@]}")
+        ;;
+    *)
+        echo "Invalid option: $1"
+        usage
+        exit 1
+        ;;
+    esac
+
+    if [ -n "${deps_to_remove[*]}" ]; then
+        local remove
+
+        remove="sudo pacman -Rns"
+
+        printf "Removing dependencies: "
+        magenta_bold -S ", " "${deps_to_remove[@]}"
+
+        if [ "$noconfirm" = true ]; then
+            remove+=" --noconfirm"
+            echo "Proceeding with removal due to --noconfirm flag..."
+        else
+            confirm "Proceed with removal dependencies?" || exit 1
+        fi
+
+        $remove "${deps_to_remove[@]}"
+    fi
+}
+
+extract_value() {
+    local content query splitter
+
+    content=$1
+    query=$2
+    splitter=$3
+
+    echo "$content" | grep "${query}" | cut -d "$splitter" -f2
+}
+
+###########################
+
+set_download_data() {
+    local file_name response api_url release_tag release_download
+    local -n ptr_tag=${1}
+    local -n ptr_download_url=${2}
+
+    api_url="https://api.github.com/repos/${repo}/releases"
+
+    if [ "$tag" = "latest" ]; then
+        api_url+="/latest"
+        response=$(curl -fsSL "$api_url")
+        release_tag=$(jq -r '.tag_name' <<<"$response")
+        file_name="${pkgname}-${release_tag}.${file_ext}"
+        release_download=$(jq --arg file_name "$file_name" -r '.assets[] | select(.browser_download_url | contains($file_name)) | .browser_download_url' <<<"$response")
+    else
+        file_name="${pkgname}-${release_tag}.${file_ext}"
+        response=$(curl -fsSL "$api_url")
+        release_download=$(jq --arg release_tag "$release_tag" --arg file_name "$file_name" -r '.[] | select(.tag_name == $release_tag) | .assets[] | select(.browser_download_url | contains($file_name)) | .browser_download_url' <<<"$response")
+    fi
+
+    [ -z "$release_download" ] && throw "No download URL found for tag $(yellow_bold "$release_tag")"
+
+    # shellcheck disable=SC2034
+    ptr_tag="$release_tag"
+    # shellcheck disable=SC2034
+    ptr_download_url="$release_download"
+}
+
+install() {
+    local download_url=$1
+    local workdir=$2
+    local zipfile=$3
+
+    sudo mkdir -p "$workdir"
+    sudo chmod -R 777 "$workdir"
+    trap 'sudo rm -rf $workdir' EXIT
+
+    sudo curl -fsSL "$download_url" -o "$zipfile"
+    sudo unzip -q "$zipfile" -d "$install_dir/"
+    $pkgname self create
+}
+
+show_help() {
+    cat <<EOF
+
+Usage:
+  $0 [options]
+
+Options:
+  -t, --tag tag
+  	Specify the tag to download
+	Available: latest, v1.0.0, v0.0.2, ...
+	Default: latest
+
+  -d, --dir DIR
+	Specify the installation directory
+	Default: /usr/local/bin
+	(NOTE: I don't recommend changing this as it causes bugs when used with chroot/arch-chroot)
+
+  -y, --noconfirm
+	Don't ask for confirmation
+	Default: false
+
+  -r, --rmdeps
+	Remove build dependencies after installation
+	Default: false
+	NOTE: Not removing build dependencies will make future updates faster
+
+  -q, --quiet
+	Quiet mode (no output)
+	Default: false
+	NOTE: This will still print errors if any occur
+
+  --dry-run
+	Don't actually install anything
+	Default: false
+
+  -h, --help
+	Show this help message and exit
+
+Examples:
+  $0 -y
+	Installs the latest version of $pkgname in /usr/local/bin without confirmation
+
+  $0 -t v0.0.1
+	Installs $pkgname v0.0.1 in /usr/local/bin
+EOF
+}
+
+parse_args() {
+    if [[ "$*" =~ -t|--tag ]]; then
+        set -- "$@" --tag $tag
+    fi
+
+    while test $# -gt 0; do
+        case $1 in
+        -t | --tag)
+            is_valid_tag "$2" || throw "Invalid tag format: $2" echo
+            tag="$2"
+            shift
+            ;;
+        -d | --dir)
+            dir_exists "$2" || throw "Invalid directory: $2" echo
+            install_dir="$2"
+            shift
+            ;;
+        -y | --noconfirm)
+            noconfirm=true
+            ;;
+        -r | --rmdeps)
+            rmdeps=true
+            ;;
+        -q | --quiet)
+            quiet=true
+            ;;
+        --dry-run)
+            dry_run=true
+            ;;
+        -h | --help)
+            show_help
+            exit
+            ;;
+        esac
+        shift
+    done
+}
+
+init() {
+    dependencies=()
+    dev_dependencies=()
+    noconfirm=
+    quiet=
+    dry_run=
+    rmdeps=
+
+    set -e
+    clear
+
+    need arch-install-scripts
+    need git
+    need mold
+    need -b unzip
+    need -b jq
+    need -b curl
+    install_dependencies
+
+    # install options
+    tag="latest"
+    install_dir="/usr/local/bin"
+
+    # internal use
+    pkgname="aurbuilder"
+    repo="sirius-red/${pkgname}"
+    file_ext="zip"
+
+    parse_args "$@"
+}
+
+run() {
+    local workdir zipfile download_url download_tag
+
+    workdir="/tmp/${pkgname}-$$"
+    zipfile="${workdir}/$pkgname.${file_ext}"
+
+    set_download_data download_tag download_url
+
+    if [ "$tag" == "latest" ]; then
+        download_tag+=" $(green_bold "(latest)")"
+    elif [[ "$tag" =~ -dev$ ]]; then
+        download_tag+=" $(yellow_bold "(unstable)")"
+    fi
+
+    print
+    print "$(magenta_bold "$(upper "$pkgname installer")")"
+    print
+    print "Version: $(blue_bold "$download_tag")"
+    print "Repo: $(blue_bold $repo)"
+    print "Download url: $(blue_bold "$download_url")"
+    print "Install dir: $(blue_bold "$install_dir")"
+    print
+
+    [ "$noconfirm" = true ] || confirm "Continue?" || exit 1
+
+    dry_run || install "$download_url" "$workdir" "$zipfile"
+
+    [ -z "$rmdeps" ] || remove_dependencies --dev
+}
+
+if init "$@" && run; then
+    green_bold "Done!"
+else
+    red_bold "An error occurred!"
+fi
