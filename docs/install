@@ -93,32 +93,8 @@ blue_underlined() { color --blue --underlined "$@"; }
 magenta_underlined() { color --magenta --underlined "$@"; }
 cyan_underlined() { color --cyan --underlined "$@"; }
 
-confirm() {
-    if ! [[ -t 1 ]]; then
-        return 0
-    fi
-
-    while true; do
-        read -r -p "$* [$(green Y)/$(red n)]: " yn
-        case $yn in
-        [Yy]*)
-            echo
-            return 0
-            ;;
-        [Nn]*)
-            echo
-            return 1
-            ;;
-        esac
-    done
-}
-
 dry_run() {
     [[ "$dry_run" = true ]]
-}
-
-noconfirm() {
-    [[ "$noconfirm" = true ]]
 }
 
 dir_exists() {
@@ -184,22 +160,11 @@ need() {
 }
 
 install_dependencies() {
-    local install
-
     if [ -n "${dependencies[*]}" ]; then
-        install="sudo pacman -S --needed --asdeps"
-
         printf "Missing dependencies: "
         magenta_bold -S ", " "${dependencies[@]}"
 
-        if [ "$noconfirm" = true ]; then
-            install+=" --noconfirm"
-            echo "Proceeding with installation due to --noconfirm flag..."
-        else
-            confirm "Proceed with installation?" || exit 1
-        fi
-
-        $install "${dependencies[@]}"
+        sudo pacman -S --needed --asdeps --noconfirm "${dependencies[@]}"
     fi
 }
 
@@ -240,21 +205,10 @@ remove_dependencies() {
     esac
 
     if [ -n "${deps_to_remove[*]}" ]; then
-        local remove
-
-        remove="sudo pacman -Rns"
-
         printf "Removing dependencies: "
         magenta_bold -S ", " "${deps_to_remove[@]}"
 
-        if [ "$noconfirm" = true ]; then
-            remove+=" --noconfirm"
-            echo "Proceeding with removal due to --noconfirm flag..."
-        else
-            confirm "Proceed with removal dependencies?" || exit 1
-        fi
-
-        $remove "${deps_to_remove[@]}"
+        sudo pacman -Rns --noconfirm "${deps_to_remove[@]}"
     fi
 }
 
@@ -328,10 +282,6 @@ Options:
 	Default: /usr/local/bin
 	(NOTE: I don't recommend changing this as it causes bugs when used with chroot/arch-chroot)
 
-  -y, --noconfirm
-	Don't ask for confirmation
-	Default: false
-
   -r, --rmdeps
 	Remove build dependencies after installation
 	Default: false
@@ -350,8 +300,8 @@ Options:
 	Show this help message and exit
 
 Examples:
-  $0 -y
-	Installs the latest version of $pkgname in /usr/local/bin without confirmation
+  $0
+	Installs the latest version of $pkgname in /usr/local/bin
 
   $0 -t v0.0.1
 	Installs $pkgname v0.0.1 in /usr/local/bin
@@ -375,9 +325,6 @@ parse_args() {
             install_dir="$2"
             shift
             ;;
-        -y | --noconfirm)
-            noconfirm=true
-            ;;
         -r | --rmdeps)
             rmdeps=true
             ;;
@@ -399,7 +346,6 @@ parse_args() {
 init() {
     dependencies=()
     dev_dependencies=()
-    noconfirm=
     quiet=
     dry_run=
     rmdeps=
@@ -449,8 +395,6 @@ run() {
     print "Download url: $(blue_bold "$download_url")"
     print "Install dir: $(blue_bold "$install_dir")"
     print
-
-    [ "$noconfirm" = true ] || confirm "Continue?" || exit 1
 
     dry_run || install "$download_url" "$workdir" "$zipfile"
 
