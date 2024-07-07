@@ -23,8 +23,11 @@ remove_user() {
 	fi
 }
 
-# TODO: ADD THIS AS A COMMAND IN MAIN SCRIPT
 self_uninstall() {
+	local path
+
+	path=$(which "$AB_USER_NAME")
+
 	remove_user 1>/dev/null
-	rm -rf "$BIN_PATH" 1>/dev/null
+	sudo rm -rf "$path" 1>/dev/null
 }
