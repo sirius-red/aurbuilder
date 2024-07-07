@@ -1,6 +1,6 @@
 name: aurbuilder
 help: A helper to install packages from aur logged in as root using yay or makepkg (This uses mold as linker instead of ld)
-version: 1.0.1
+version: 2.0.0
 
 commands:
   - name: install
@@ -129,6 +129,12 @@ environment_variables:
     default: aurbuilder
     help: The name of the user to use for the build process
 
+  - name: AB_USER_ID
+    private: true
+    required: false
+    default: $(id -u "$AB_USER_NAME" 2>/dev/null)
+    help: The UID of the user used by aurbuilder
+
   - name: AB_USER_GROUP
     private: true
     required: false
@@ -145,7 +151,7 @@ environment_variables:
     private: true
     required: false
     default: /etc/sudoers.d/$AB_USER_NAME
-    help: The sudoers file to use for setup $AB_PKGNAME user
+    help: The sudoers file to use for setup aurbuilder user
 
   - name: AB_TMP_NUMBER
     private: true

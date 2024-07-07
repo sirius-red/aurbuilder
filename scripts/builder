@@ -26,16 +26,19 @@ make_release() {
 }
 
 install() {
-	local built_file install_dir
+	local name built_file install_dir
 
-	built_file=$1
-	install_dir=$2
+	name=$1
+	built_file=$2
+	install_dir=$3
 
+	need arch-install-scripts
 	need git
 	need mold
 	install_dependencies
 
 	sudo cp -f "$built_file" "$install_dir"
+	$name self create
 }
 
 show_help() {
@@ -91,7 +94,8 @@ $(bold Options:)
 
   $(blue -S ", " "--installdir") $(yellow "<dir>")
 	Directory to install the bundle
-	Default: $(magenta /usr/bin)
+	Default: $(magenta /usr/local/bin)
+	(NOTE: I don't recommend changing this as it causes bugs when used with chroot/arch-chroot)
 
   $(blue -S ", " "--dry-run")
 	Dry run without actually building the release
@@ -197,7 +201,7 @@ init() {
 
 	# install options
 	to_install=
-	install_dir='/usr/bin'
+	install_dir='/usr/local/bin'
 
 	# bashly options
 	upgrade=
@@ -257,7 +261,7 @@ run() {
 		print "Install directory: $(blue_bold "$install_dir")"
 		print
 
-		dry_run || install "$built_file" "$install_dir"
+		dry_run || install "$name" "$built_file" "$install_dir"
 	fi
 }
 

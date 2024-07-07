@@ -55,7 +55,8 @@ Options:
 
   -d, --dir DIR
 	Specify the installation directory
-	Default: /usr/bin
+	Default: /usr/local/bin
+	(NOTE: I don't recommend changing this as it causes bugs when used with chroot/arch-chroot)
 
   -y, --noconfirm
 	Don't ask for confirmation
@@ -80,9 +81,9 @@ Options:
 
 Examples:
   $0 -y
-	Installs the latest version of $pkgname in /usr/bin without confirmation
+	Installs the latest version of $pkgname in /usr/local/bin without confirmation
 
-  $0 --dir /usr/local/bin -t v0.0.1
+  $0 -t v0.0.1
 	Installs $pkgname v0.0.1 in /usr/local/bin
 EOF
 }
@@ -132,6 +133,7 @@ init() {
 	set -e
 	clear
 
+	need arch-install-scripts
 	need git
 	need mold
 	need -b unzip
@@ -141,7 +143,7 @@ init() {
 
 	# install options
 	tag="latest"
-	install_dir="/usr/bin"
+	install_dir="/usr/local/bin"
 
 	# internal use
 	pkgname="aurbuilder"
