@@ -11,6 +11,10 @@ make_bundle() {
 	dir_exists "$build_dir" && rm -rf "$build_dir"
 	mkdir -p "$build_dir"
 	bashly generate "${options[@]}"
+
+	if [ "$ENV" = "production" ]; then
+		shfmt --write --simplify --minify --language-dialect bash "${build_dir}/${name}"
+	fi
 }
 
 make_release() {
@@ -192,6 +196,7 @@ init() {
 
 	need zip
 	need ruby
+	need shfmt
 	install_dependencies
 
 	# build options
