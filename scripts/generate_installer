@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+utils=$(cat scripts/utils)
+installer=$(cat scripts/installer)
+outfile="docs/install"
+
+utils=${utils//export noconfirm/export noconfirm=true}
+installer=$(echo "$installer" | sed "/\#\!\/usr\/bin\/env bash/d")
+installer=$(echo "$installer" | sed "/#shellcheck source=utils/d")
+installer=$(echo "$installer" | sed "/source scripts\/utils/d")
+new_installer=$(
+	cat <<EOF
+#!/usr/bin/env bash
+
+$utils
+
+$installer
+EOF
+)
+
+echo "$new_installer" >docs/install
+
+shfmt --write --simplify --minify --language-dialect bash "$outfile"
