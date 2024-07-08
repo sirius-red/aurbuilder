@@ -44,47 +44,51 @@ install() {
 show_help() {
 	cat <<EOF
 
-Usage:
-  $0 [options]
+$(bold Usage:)
+  $(green_bold "$0") [$(blue options)]
 
-Options:
-  -t, --tag tag
+$(bold Options:)
+  $(blue -S ", " "-t --tag") $(yellow "<TAG>")
   	Specify the tag to download
 	Available: latest, v1.0.0, v0.0.2, ...
-	Default: latest
+	Default: $(magenta "latest")
 
-  -d, --dir DIR
+  $(blue -S ", " "-d --dir") $(yellow "<DIR>")
 	Specify the installation directory
-	Default: /usr/local/bin
+	Default: $(magenta "/usr/local/bin")
 	(NOTE: I don't recommend changing this as it causes bugs when used with chroot/arch-chroot)
 
-  -y, --noconfirm
-	Don't ask for confirmation
-	Default: false
+  $(blue -S ", " "-c --chroot") $(yellow "<DIR>")
+	Root directory for installation, used for chroot installations
+	Default: $(magenta "None")
+	NOTE: If this is set to '/mnt' and --dir is '/usr/local/bin', the final installation path will be '/mnt/usr/local/bin'
 
-  -r, --rmdeps
+  $(blue -S ", " "-r --rmdeps")
 	Remove build dependencies after installation
-	Default: false
+	Default: $(magenta "false")
 	NOTE: Not removing build dependencies will make future updates faster
 
-  -q, --quiet
+  $(blue -S ", " "-q --quiet")
 	Quiet mode (no output)
-	Default: false
+	Default: $(magenta "false")
 	NOTE: This will still print errors if any occur
 
-  --dry-run
+  $(blue -S ", " "--dry-run")
 	Don't actually install anything
-	Default: false
+	Default: $(magenta "false")
 
-  -h, --help
+  $(blue -S ", " "-h --help")
 	Show this help message and exit
 
-Examples:
-  $0 -y
-	Installs the latest version of $pkgname in /usr/local/bin without confirmation
+$(bold Examples:)
+  $(green_bold "$0")
+	Installs the latest version of $pkgname in /usr/local/bin
 
-  $0 -t v0.0.1
-	Installs $pkgname v0.0.1 in /usr/local/bin
+  $(green_bold "$0") $(blue -S ", " "--chroot") $(yellow "/mnt")
+	Installs the latest version of $pkgname in /mnt/usr/local/bin
+
+  $(green_bold "$0") $(blue -S ", " "-t") v1.0.0
+	Installs $pkgname v1.0.0 in /usr/local/bin
 EOF
 }
 
@@ -105,8 +109,10 @@ parse_args() {
 			install_dir="$2"
 			shift
 			;;
-		-y | --noconfirm)
-			noconfirm=true
+		-c | --chroot)
+			dir_exists "$2" || throw "Invalid chroot directory: $2" echo
+			install_dir="${2}${install_dir}"
+			shift
 			;;
 		-r | --rmdeps)
 			rmdeps=true
@@ -175,8 +181,6 @@ run() {
 	print "Download url: $(blue_bold "$download_url")"
 	print "Install dir: $(blue_bold "$install_dir")"
 	print
-
-	[ "$noconfirm" = true ] || confirm "Continue?" || exit 1
 
 	dry_run || install "$download_url" "$workdir" "$zipfile"
 

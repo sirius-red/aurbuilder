@@ -15,7 +15,10 @@ Apesar do foco ser o uso durante a instalação do Arch, o AUR Builder funciona 
 ### Instalação automática
 
 ```bash
-curl -L https://sirius-red.github.io/install | bash
+curl -L https://sirius-red.github.io/aurbuilder/install | sh
+
+# Alterando o diretório root, altere `/mnt` pelo diretório que deseja usar como root
+curl -L https://sirius-red.github.io/aurbuilder/install | sh -s -- --chroot /mnt
 ```
 
 ### Construindo a partir da fonte
@@ -52,7 +55,7 @@ aurbuilder --chroot /mnt <nome_do_pacote>
 aurbuilder --help
 ```
 
-Mas caso queira, segue o link da [documentação oficial](https://sirius-red.github.io/docs)
+Mas caso queira, segue o link da [documentação oficial](https://sirius-red.github.io/aurbuilder/docs)
 
 ## Contribuindo
 

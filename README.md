@@ -17,7 +17,10 @@ Although the focus is on use during Arch installation, AUR Builder works very we
 ### Automatic installation
 
 ```bash
-curl -L https://sirius-red.github.io/aurbuilder/install | bash
+curl -L https://sirius-red.github.io/aurbuilder/install | sh
+
+# Changing the root directory, change `/mnt` to the directory you want to use as root
+curl -L https://sirius-red.github.io/aurbuilder/install | sh -s -- --chroot /mnt
 ```
 
 ### Building from source
