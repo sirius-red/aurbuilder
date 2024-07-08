@@ -195,7 +195,7 @@ install_dependencies() {
 		printf "Missing dependencies: "
 		magenta_bold -S ", " "${dependencies[@]}"
 
-		if [ "$noconfirm" = true ]; then
+		if noconfirm; then
 			install+=" --noconfirm"
 			echo "Proceeding with installation due to --noconfirm flag..."
 		else
@@ -250,7 +250,7 @@ remove_dependencies() {
 		printf "Removing dependencies: "
 		magenta_bold -S ", " "${deps_to_remove[@]}"
 
-		if [ "$noconfirm" = true ]; then
+		if noconfirm; then
 			remove+=" --noconfirm"
 			echo "Proceeding with removal due to --noconfirm flag..."
 		else
