@@ -28,9 +28,12 @@ set_download_data() {
 }
 
 install() {
-	local download_url=$1
-	local workdir=$2
-	local zipfile=$3
+	local download_url workdir zipfile command
+
+	download_url=$1
+	workdir=$2
+	zipfile=$3
+	command="$pkgname self create"
 
 	sudo mkdir -p "$workdir"
 	sudo chmod -R 777 "$workdir"
@@ -38,7 +41,12 @@ install() {
 
 	sudo curl -fsSL "$download_url" -o "$zipfile"
 	sudo unzip -q "$zipfile" -d "$install_dir/"
-	$pkgname self create
+
+	if [ -n "$chroot_dir" ]; then
+		command+=" --chroot $chroot_dir"
+	fi
+
+	$command
 }
 
 show_help() {
@@ -112,6 +120,7 @@ parse_args() {
 		-c | --chroot)
 			dir_exists "$2" || throw "Invalid chroot directory: $2" echo
 			install_dir="${2}${install_dir}"
+			chroot_dir="$2"
 			shift
 			;;
 		-r | --rmdeps)
@@ -155,6 +164,7 @@ init() {
 	pkgname="aurbuilder"
 	repo="sirius-red/${pkgname}"
 	file_ext="zip"
+	chroot_dir=
 
 	parse_args "$@"
 }
