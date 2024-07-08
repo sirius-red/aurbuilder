@@ -19,8 +19,11 @@ validate_not_empty() {
 }
 
 validate_package_exists() {
-	local url="https://aur.archlinux.org/${1}.git"
-	if ! git ls-remote --exit-code "$url" &>/dev/null; then
-		echo "The package ${1} does not exist."
+    local url
+	
+    url="https://aur.archlinux.org/packages/${1}"
+	
+    if ! curl -fs -o /dev/null "$url"; then
+		error "The package $(magenta_bold ${1}) does not exist."
 	fi
 }

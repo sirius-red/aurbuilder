@@ -88,3 +88,5 @@ yellow_underlined() { color --yellow --underlined "$@"; }
 blue_underlined() { color --blue --underlined "$@"; }
 magenta_underlined() { color --magenta --underlined "$@"; }
 cyan_underlined() { color --cyan --underlined "$@"; }
+
+error() { red_bold "[ERROR] $*" >&2; }
