@@ -5,7 +5,7 @@ create_user() {
 		password=$(tr </dev/urandom -dc 'a-zA-Z0-9' | head -c 16)
 		credentials="${AB_USER_NAME}:${password}"
 
-		useradd --system --user-group --no-create-home --home-dir "$AB_USER_HOME" --shell /usr/bin/nologin "$AB_USER_NAME"
+		useradd --system --no-create-home --user-group --groups wheel,storage --home-dir "$AB_USER_HOME" --shell /usr/bin/nologin "$AB_USER_NAME"
 
 		chpasswd <<<"$credentials"
 
