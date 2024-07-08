@@ -2,9 +2,9 @@
 
 A helper to install packages from aur logged in as root using yay or makepkg (This uses mold as linker instead of ld)
 
-| Attributes       | &nbsp;
-|------------------|-------------
-| Version:         | 2.0.1
+| Attributes | &nbsp; |
+| ---------- | ------ |
+| Version:   | 2.1.0  |
 
 ## Usage
 
@@ -18,9 +18,9 @@ aurbuilder [OPTIONS] COMMAND
 
 The chroot directory to use (Useful to use in arch linux installation environment)
 
-| Attributes      | &nbsp;
-|-----------------|-------------
-| Default Value:  | `/`
+| Attributes     | &nbsp; |
+| -------------- | ------ |
+| Default Value: | `/`    |
 
 ## Install Commands
 
