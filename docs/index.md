@@ -15,7 +15,7 @@ Although the focus is on use during Arch installation, AUR Builder works very we
 ### Automatic installation
 
 ```bash
-curl -L https://sirius-red.github.io/install | bash
+curl -L https://sirius-red.github.io/aurbuilder/install | bash
 ```
 
 ### Building from source
