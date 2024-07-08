@@ -63,6 +63,7 @@ Instale as dependências necessárias:
 
 - **zip** (instale com seu gerenciador de pacotes)
 - **ruby** (instale com seu gerenciador de pacotes)
+- **shfmt** (instale com seu gerenciador de pacotes)
 - **bashly** (informações da instalação na [documentação oficial](https://bashly.dannyb.co/installation/))
 
 **Leia a documentação do bashly antes de qualquer coisa, não vai conseguir fazer nada sem saber como ele funciona.**

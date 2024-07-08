@@ -65,6 +65,7 @@ Install the required dependencies:
 
 - **zip** (install with your package manager)
 - **ruby** (install with your package manager)
+- **shfmt** (install with your package manager)
 - **bashly** (Installation information in [official documentation](https://bashly.dannyb.co/installation/))
 
 **Read the bashly documentation first, you won't be able to do anything without knowing how it works.**
