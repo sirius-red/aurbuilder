@@ -17,12 +17,25 @@ parse_permissions() {
 		done
 	}
 
+	arch_chroot() {
+		local command
+
+		if [ "$1" = "exec_this_as_aurbuilder" ]; then
+			shift 1
+			command="$(printf "%q " "$@")"
+			exec sudo arch-chroot -u "$AB_USER_NAME" "$CHROOT" /usr/bin/bash -c "$command"
+		else
+			command="$(printf "%q " "$@")"
+			exec sudo arch-chroot "$CHROOT" /usr/bin/bash -c "$command"
+		fi
+	}
+
 	exec_this_as_root() {
 		if [ "$UID" -ne 0 ]; then
 			if [ "$CHROOT" = "/" ]; then
 				exec sudo "$0" "$@"
 			else
-				exec sudo arch-chroot "$CHROOT" "$0" "$@"
+				arch_chroot "$0" "$@"
 			fi
 		fi
 	}
@@ -32,7 +45,7 @@ parse_permissions() {
 			if [ "$CHROOT" = "/" ]; then
 				exec sudo -u "$AB_USER_NAME" "$0" "$@"
 			else
-				exec sudo arch-chroot -u "$AB_USER_NAME" "$CHROOT" "$0" "$@"
+				arch_chroot exec_this_as_aurbuilder "$0" "$@"
 			fi
 		fi
 	}
