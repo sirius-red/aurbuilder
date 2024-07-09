@@ -1,10 +1,13 @@
-echo "Removing $(cyan_bold "$AB_USER_NAME") user and settings..."
+echo
+echo "Removing $AB_TITLE user and settings..."
 
 if remove_user; then
-	green "Done!"
-	exit
+	success "AUR Builder user removed successfuly!"
+	exit_code=0
 else
+	error "Error removing AUR Builder user!"
 	exit_code=$?
-	red "Error!"
-	exit $exit_code
 fi
+
+echo
+exit $exit_code

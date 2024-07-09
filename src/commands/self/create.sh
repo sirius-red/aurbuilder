@@ -1,10 +1,14 @@
-echo "Creating and setting up $(cyan_bold "$AB_USER_NAME") user..."
+echo
+echo "Creating and setting up $(magenta_bold "AUR Builder") user..."
 
 if create_user; then
-	green "Done!"
-	exit
+	success "AUR Builder user created successfuly!"
+	exit_code=0
 else
+	error "Error creating AUR Builder user!"
 	exit_code=$?
-	red "Error!"
-	exit $exit_code
 fi
+
+echo
+exit exit_code
+

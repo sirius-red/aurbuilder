@@ -11,8 +11,8 @@ partials_extension: sh
 conjoined_flag_args: true
 show_examples_on_error: true
 usage_colors:
-  caption: underlined
-  command: green
-  arg: magenta
-  flag: blue
-  environment_variable: cyan
+  caption: bold
+  command: green_bold
+  arg: magenta_bold
+  flag: blue_bold
+  environment_variable: cyan_bold

@@ -90,3 +90,5 @@ magenta_underlined() { color --magenta --underlined "$@"; }
 cyan_underlined() { color --cyan --underlined "$@"; }
 
 error() { red_bold "[ERROR] $*" >&2; }
+success() { green_bold "[OK] $*" >&1; }
+upper() { printf '%s' "${*^^}"; }

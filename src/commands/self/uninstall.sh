@@ -1,11 +1,14 @@
-echo "Uninstalling $(cyan_bold "$AB_USER_NAME") and all settings permanently..."
+echo
+echo "Uninstalling $(magenta_bold "AUR Builder") and all settings permanently..."
 
 if self_uninstall; then
-	green "Done!"
+	success "AUR Builder uninstalled successfuly!"
 	magenta_bold "Bye! :("
-	exit
+	exit_code=0
 else
+	error "Error uninstalling AUR Builder!"
 	exit_code=$?
-	red "Error!"
-	exit $exit_code
 fi
+
+echo
+exit $exit_code
