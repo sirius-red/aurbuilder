@@ -1,6 +1,12 @@
 name: aurbuilder
 help: A helper to install packages from aur logged in as root using yay or makepkg (This uses mold as linker instead of ld)
-version: 2.1.1
+version: 2.2.0
+
+dependencies:
+  arch-chroot: Install with `pacman -S arch-install-scripts`
+  git: Install with `pacman -S git`
+  mold: Install with `pacman -S mold`
+  pacman: This package is installed with the base Arch Linux installation
 
 commands:
   - name: install
@@ -8,11 +14,6 @@ commands:
     private: false
     help: Install package(s) from AUR
     group: Install
-    dependencies:
-      arch-chroot: $(missing_dependencie arch-chroot)
-      git: $(missing_dependencie git)
-      mold: $(missing_dependencie mold)
-      pacman:
 
     args:
       - name: package
@@ -82,7 +83,7 @@ commands:
         private: false
         required: false
         default: $AB_USER_HOME/build-$AB_TMP_NUMBER
-        help: The build directory to use (The number $(magenta $AB_TMP_NUMBER) is randomly generated at each run)
+        help: The build directory to use (The number "$AB_TMP_NUMBER" is randomly generated at each run)
 
       - name: AURDEST
         private: true
@@ -124,6 +125,12 @@ flags:
     help: The chroot directory to use (Useful to use in arch linux installation environment)
 
 environment_variables:
+  - name: AB_TITLE
+    private: true
+    required: false
+    default: $(magenta_bold "AUR Builder")
+    help: The title of this script
+
   - name: AB_USER_NAME
     private: true
     required: false
