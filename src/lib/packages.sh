@@ -39,10 +39,10 @@ install_with_yay() {
 	[ "$NOCONFIRM" = true ] && {
 		options+=(
 			--noconfirm
-			"--answerclean N"
-			"--answerdiff N"
-			"--answeredit N"
-			"--answerupgrade N"
+			"--answerclean" "N"
+			"--answerdiff" "N"
+			"--answeredit" "N"
+			"--answerupgrade" "N"
 		)
 	}
 
@@ -69,13 +69,5 @@ install_packages() {
 		install="install_with_makepkg"
 	fi
 
-	echo "Installing packages with $(green_bold "$INSTALLER"): $(magenta_bold ", " "${packages[@]}")"
-	echo
-	echo "$(cyan_bold MAKEFLAGS)=$(blue_bold "$MAKEFLAGS")"
-	echo "$(cyan_bold BUILDDIR)=$(blue_bold "$BUILDDIR")"
-	echo
-
 	$install "${packages[@]}"
-
-	green_bold "Done!"
 }
