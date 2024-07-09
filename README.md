@@ -38,17 +38,17 @@ When trying to install a package, aurbuilder will use `yay` if it is installed, 
 Just use the command below:
 
 ```bash
-aurbuilder <package_name>
+aurbuilder install <package_name>
 
-# Installing multiple packages
-aurbuilder package1 package2 package3
+# Installing multiple packages without confirmation messagens
+aurbuilder i -y package1 package2 package3
 ```
 
 If you are using aurbuilder to install packages when installing Arch:
 
 ```bash
 # Replace `/mnt` to the directory where you mounted the root partition
-aurbuilder --chroot /mnt <package_name>
+aurbuilder i --chroot /mnt <package_name>
 ```
 
 **All** necessary information is in the help command:

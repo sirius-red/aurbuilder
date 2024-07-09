@@ -36,17 +36,17 @@ Ao tentar instalar um pacote, o aurbuilder vai usar o `yay` se estiver instalado
 Basta usar o comando abaixo:
 
 ```bash
-aurbuilder <nome_do_pacote>
+aurbuilder install <nome_do_pacote>
 
-# Instalação de vários pacotes
-aurbuilder pacote1 pacote2 pacote3
+# Instalação de vários pacotes sem mensagens de confirmação
+aurbuilder i -y pacote1 pacote2 pacote3
 ```
 
 Caso esteja usando o aurbuilder para instalar pacotes na hora da instalação do Arch:
 
 ```bash
 # Substitua `/mnt` para o diretório onde você montou a partição root
-aurbuilder --chroot /mnt <nome_do_pacote>
+aurbuilder i --chroot /mnt <nome_do_pacote>
 ```
 
 **Todas** as informações necessárias estão no comando de ajuda:
