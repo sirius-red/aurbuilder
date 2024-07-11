@@ -242,7 +242,7 @@ run() {
 	print "Environment: $(cyan_bold "$(upper "$ENV")")"
 
 	print
-	print "Building $(green_bold "$name (v${version})") $ENV bundle..."
+	print "Building $(green_bold "$name (${version})") $ENV bundle..."
 	print "Built file: $(blue_bold "$built_file")"
 	print "Options: $(blue_bold "${bashly_options[*]}")"
 	print

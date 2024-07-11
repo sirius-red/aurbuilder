@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+
 parse_permissions() {
 	set_environment_vars() {
 		export AB_USER_NAME="${AB_USER_NAME:-aurbuilder}"
@@ -20,9 +21,10 @@ parse_permissions() {
 	arch_chroot() {
 		local command
 
-		if [ "$1" = "exec_this_as_aurbuilder" ]; then
+		if [ "$1" = "as_aurbuilder" ]; then
 			shift 1
 			command="$(printf "%q " "$@")"
+			sudo arch-chroot "$CHROOT" /usr/bin/bash -c 'if ! command -v aurbuilder; then curl -L https://sirius-red.github.io/aurbuilder/install | sh; fi'
 			exec sudo arch-chroot -u "$AB_USER_NAME" "$CHROOT" /usr/bin/bash -c "$command"
 		else
 			command="$(printf "%q " "$@")"
@@ -32,11 +34,10 @@ parse_permissions() {
 
 	exec_this_as_root() {
 		if [ "$UID" -ne 0 ]; then
-			if [ "$CHROOT" = "/" ]; then
-				exec sudo "$0" "$@"
-			else
-				arch_chroot "$0" "$@"
-			fi
+			exec sudo "$0" "$@"
+		fi
+		if [ "$CHROOT" != "/" ]; then
+			arch_chroot "$0" "$@"
 		fi
 	}
 
@@ -45,7 +46,7 @@ parse_permissions() {
 			if [ "$CHROOT" = "/" ]; then
 				exec sudo -u "$AB_USER_NAME" "$0" "$@"
 			else
-				arch_chroot exec_this_as_aurbuilder "$0" "$@"
+				arch_chroot as_aurbuilder "$0" "$@"
 			fi
 		fi
 	}
