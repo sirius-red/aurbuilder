@@ -21,3 +21,4 @@ EOF
 echo "$new_installer" >docs/install
 
 shfmt --write --simplify --minify --language-dialect bash "$outfile"
+sudo chmod +x "$outfile"
