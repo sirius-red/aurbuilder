@@ -189,6 +189,9 @@ run() {
 	print "Repo: $(blue_bold $repo)"
 	print "Download url: $(blue_bold "$download_url")"
 	print "Install dir: $(blue_bold "$install_dir")"
+	if [ -n "$chroot_dir" ]; then
+		print "Chroot dir: $(blue_bold "$chroot_dir")"
+	fi
 	print
 
 	dry_run || install "$download_url" "$workdir" "$zipfile"
