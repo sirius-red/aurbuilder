@@ -223,8 +223,9 @@ release_tag=$(jq -r '.tag_name' <<<"$response")
 file_name="$pkgname-$release_tag.$file_ext"
 release_download=$(jq --arg file_name "$file_name" -r '.assets[] | select(.browser_download_url | contains($file_name)) | .browser_download_url' <<<"$response")
 else
-file_name="$pkgname-$release_tag.$file_ext"
 response=$(curl -fsSL "$api_url")
+release_tag="$tag"
+file_name="$pkgname-$release_tag.$file_ext"
 release_download=$(jq --arg release_tag "$release_tag" --arg file_name "$file_name" -r '.[] | select(.tag_name == $release_tag) | .assets[] | select(.browser_download_url | contains($file_name)) | .browser_download_url' <<<"$response")
 fi
 [ -z "$release_download" ]&&throw "No download URL found for tag $(yellow_bold "$release_tag")"
@@ -298,7 +299,7 @@ $(bold Examples:)
 EOF
 }
 parse_args(){
-if [[ $* =~ -t|--tag ]];then
+if ! [[ $* =~ -t|--tag ]];then
 set -- "$@" --tag $tag
 fi
 while test $# -gt 0;do
