@@ -14,6 +14,7 @@ EOF
 parse_permissions() {
 	set_environment_vars() {
 		export AB_USER_NAME AB_USER_ID CHROOT
+		local new_args=()
 
 		AB_USER_NAME="${AB_USER_NAME:-aurbuilder}"
 		AB_USER_ID=$(id -u "$AB_USER_NAME" 2>/dev/null)
@@ -22,10 +23,14 @@ parse_permissions() {
 		while test $# -gt 0; do
 			if [ "$1" = "--chroot" ]; then
 				CHROOT="$2"
-				break
+				shift
+			else
+				new_args+=("$1")
 			fi
 			shift
 		done
+
+		set -- "${new_args[@]}"
 	}
 
 	install_aurbuilder_on_chroot() {
@@ -67,11 +72,16 @@ parse_permissions() {
 
 	set_environment_vars "$@"
 
-	if [[ "$1" =~ ^(s|self)$ ]]; then
-		exec_as_root "$@"
-	elif [[ "$1" =~ ^(i|install)$ ]]; then
-		exec_as_aurbuilder "$@"
-	fi
+	while test $# -gt 0; do
+		if [[ "$1" =~ ^(s|self)$ ]]; then
+			exec_as_root "$@"
+			break
+		elif [[ "$1" =~ ^(i|install)$ ]]; then
+			exec_as_aurbuilder "$@"
+			break
+		fi
+		shift
+	done
 }
 
 parse_permissions "$@"
