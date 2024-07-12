@@ -58,6 +58,16 @@ make_release() {
 	zip -9 -j "$dist_file" "$built_file"
 }
 
+make_docs() {
+	if ! dir_exists "$DOCS_DIR"; then
+		throw "Documentation directory does not exist: $(magenta_bold "$DOCS_DIR")" echo
+	fi
+
+	DOCS_TYPE=":${DOCS_TYPE}"
+
+	dry_run || bashly render "$DOCS_TYPE" "$DOCS_DIR"
+}
+
 install() {
 	local name built_file install_dir
 
@@ -119,6 +129,11 @@ $(bold Options:)
 	Environment to use
 	Allowed: $(yellow -S " | " development production)
 	Default: $(magenta development)
+
+  $(blue -S ", " "--docs") [$(yellow "<dir>")]
+	Generates updated documentation, if a directory is not passed, the default directory will be used
+	Default: $(magenta "$DOCS_DIR")
+	NOTE: This flag should only be used alone or together with --dry-run, any other flag will be ignored
 
   $(blue -S ", " "--install")
 	Install the built bundle. Required if using --installdir
@@ -185,6 +200,13 @@ parse_args() {
 			ENV=$2
 			shift
 			;;
+		--docs)
+			MAKE_DOCS=true
+			if dir_exists "$2"; then
+				DOCS_DIR="$2"
+				shift
+			fi
+			;;
 		--install)
 			to_install=true
 			;;
@@ -238,13 +260,21 @@ init() {
 
 	# environment variables
 	ENV=${ENV:-'development'}
-	INSTALLER_URL="https:\/\/github.com\/sirius-red\/aurbuilder\/raw\/dev\/docs\/install"
+	MAKE_DOCS=
+	DOCS_TYPE="markdown" # markdown | mandoc
+	DOCS_DIR="docs/docs"
+	INSTALLER_URL="https:\/\/sirius-red.github.io\/aurbuilder\/install"
 
 	parse_args "$@"
 }
 
 run() {
 	local settings_info project_info name version build_dir built_file dist_dir dist_file bashly_options
+
+	if [ "$MAKE_DOCS" = true ]; then
+		make_docs
+		exit
+	fi
 
 	settings_info=$(tr -d '"' <"$settings_file")
 	project_config_path=$(extract_value "$settings_info" "config_path:" " ")
