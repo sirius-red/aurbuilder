@@ -1,5 +1,31 @@
 #!/usr/bin/env bash
 
+check_version() {
+	local version expected_version
+	version="${1#v}"
+
+	case "$ENV" in
+	development)
+		expected_version="${version//-dev/}-dev"
+		;;
+	production)
+		expected_version="${version//-dev/}"
+		;;
+	esac
+
+	if [[ "$version" != "$expected_version" ]]; then
+		error "Incompatible environment and version"
+		echo
+		echo "Environment: $(magenta_bold "$ENV")"
+		echo "Version defined: $(red_bold "$version")"
+		echo "Expected version: $(green_bold "$expected_version")"
+		echo
+		echo "$(bold "TIP:") Change the value of $(bold '"version"') to $(green_bold "$expected_version") in the file $(cyan_bold "$project_config_path")"
+		echo
+		exit 1
+	fi
+}
+
 make_bundle() {
 	local name version build_dir options
 	name=$1
@@ -181,10 +207,6 @@ parse_args() {
 		esac
 		shift
 	done
-
-	if [ "$ENV" = "development" ]; then
-		env_version="-dev"
-	fi
 }
 
 init() {
@@ -202,7 +224,6 @@ init() {
 	# build options
 	settings_file='./settings.yml'
 	dist_ext='zip'
-	env_version=
 
 	# install options
 	to_install=
@@ -222,10 +243,14 @@ run() {
 	local settings_info project_info name version build_dir built_file dist_dir dist_file bashly_options
 
 	settings_info=$(tr -d '"' <"$settings_file")
-	project_info=$(tr -d '"' <"$(extract_value "$settings_info" "config_path:" " ")")
+	project_config_path=$(extract_value "$settings_info" "config_path:" " ")
+	project_info=$(tr -d '"' <"$project_config_path")
 
 	name=$(extract_value "$project_info" "name:" " ")
-	version="v$(extract_value "$project_info" "version:" " ")${env_version}"
+	version="v$(extract_value "$project_info" "version:" " ")"
+
+	check_version "$version"
+
 	build_dir=$(extract_value "$settings_info" "target_dir:" " ")
 	built_file="${build_dir}/${name}"
 	dist_dir="${build_dir}/dist"
