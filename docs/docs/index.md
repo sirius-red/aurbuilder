@@ -4,7 +4,7 @@ A helper to install packages from aur logged in as root using yay or makepkg (Th
 
 | Attributes       | &nbsp;
 |------------------|-------------
-| Version:         | 3.0.0
+| Version:         | 3.1.0
 
 ## Usage
 
