@@ -156,6 +156,10 @@ upper() {
 	printf '%s' "${1^^}"
 }
 
+warn() {
+	yellow_bold "[WARNING] $*" >&1
+}
+
 error() {
 	red_bold "[ERROR] $*" >&2
 }
