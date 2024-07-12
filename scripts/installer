@@ -43,7 +43,7 @@ install() {
 	sudo unzip -q "$zipfile" -d "$install_dir"
 
 	if [ -n "$chroot_dir" ]; then
-		sudo arch-chroot "$chroot_dir" /usr/bin/bash -c 'curl -L https://sirius-red.github.io/aurbuilder/install | sh'
+		sudo arch-chroot "$chroot_dir" /usr/bin/bash -c "curl -L https://sirius-red.github.io/aurbuilder/install | sh -s -- -t $tag"
 	else
 		$pkgname self create
 	fi
