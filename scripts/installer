@@ -14,8 +14,9 @@ set_download_data() {
 		file_name="${pkgname}-${release_tag}.${file_ext}"
 		release_download=$(jq --arg file_name "$file_name" -r '.assets[] | select(.browser_download_url | contains($file_name)) | .browser_download_url' <<<"$response")
 	else
-		file_name="${pkgname}-${release_tag}.${file_ext}"
 		response=$(curl -fsSL "$api_url")
+		release_tag="$tag"
+		file_name="${pkgname}-${release_tag}.${file_ext}"
 		release_download=$(jq --arg release_tag "$release_tag" --arg file_name "$file_name" -r '.[] | select(.tag_name == $release_tag) | .assets[] | select(.browser_download_url | contains($file_name)) | .browser_download_url' <<<"$response")
 	fi
 
@@ -28,25 +29,24 @@ set_download_data() {
 }
 
 install() {
-	local download_url workdir zipfile command
+	local download_url workdir zipfile
 
 	download_url=$1
 	workdir=$2
 	zipfile=$3
-	command="$pkgname self create"
 
 	sudo mkdir -p "$workdir"
 	sudo chmod -R 777 "$workdir"
 	trap 'sudo rm -rf $workdir' EXIT
 
 	sudo curl -fsSL "$download_url" -o "$zipfile"
-	sudo unzip -q "$zipfile" -d "$install_dir/"
+	sudo unzip -q "$zipfile" -d "$install_dir"
 
 	if [ -n "$chroot_dir" ]; then
-		command+=" --chroot $chroot_dir"
+		sudo arch-chroot "$chroot_dir" /usr/bin/bash -c "curl -L ${installer_url} | sh -s -- -t ${tag}"
+	else
+		$pkgname self create
 	fi
-
-	$command
 }
 
 show_help() {
@@ -101,7 +101,7 @@ EOF
 }
 
 parse_args() {
-	if [[ "$*" =~ -t|--tag ]]; then
+	if ! [[ "$*" =~ -t|--tag ]]; then
 		set -- "$@" --tag $tag
 	fi
 
@@ -119,7 +119,6 @@ parse_args() {
 			;;
 		-c | --chroot)
 			dir_exists "$2" || throw "Invalid chroot directory: $2" echo
-			install_dir="${2}${install_dir}"
 			chroot_dir="$2"
 			shift
 			;;
@@ -161,6 +160,7 @@ init() {
 	install_dir="/usr/local/bin"
 
 	# internal use
+	installer_url="https://sirius-red.github.io/aurbuilder/install"
 	pkgname="aurbuilder"
 	repo="sirius-red/${pkgname}"
 	file_ext="zip"
@@ -190,6 +190,9 @@ run() {
 	print "Repo: $(blue_bold $repo)"
 	print "Download url: $(blue_bold "$download_url")"
 	print "Install dir: $(blue_bold "$install_dir")"
+	if [ -n "$chroot_dir" ]; then
+		print "Chroot dir: $(blue_bold "$chroot_dir")"
+	fi
 	print
 
 	dry_run || install "$download_url" "$workdir" "$zipfile"

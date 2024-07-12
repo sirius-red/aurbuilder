@@ -123,6 +123,9 @@ print(){
 upper(){
 printf '%s' "${1^^}"
 }
+warn(){
+yellow_bold "[WARNING] $*" >&1
+}
 error(){
 red_bold "[ERROR] $*" >&2
 }
@@ -223,8 +226,9 @@ release_tag=$(jq -r '.tag_name' <<<"$response")
 file_name="$pkgname-$release_tag.$file_ext"
 release_download=$(jq --arg file_name "$file_name" -r '.assets[] | select(.browser_download_url | contains($file_name)) | .browser_download_url' <<<"$response")
 else
-file_name="$pkgname-$release_tag.$file_ext"
 response=$(curl -fsSL "$api_url")
+release_tag="$tag"
+file_name="$pkgname-$release_tag.$file_ext"
 release_download=$(jq --arg release_tag "$release_tag" --arg file_name "$file_name" -r '.[] | select(.tag_name == $release_tag) | .assets[] | select(.browser_download_url | contains($file_name)) | .browser_download_url' <<<"$response")
 fi
 [ -z "$release_download" ]&&throw "No download URL found for tag $(yellow_bold "$release_tag")"
@@ -232,20 +236,20 @@ ptr_tag="$release_tag"
 ptr_download_url="$release_download"
 }
 install(){
-local download_url workdir zipfile command
+local download_url workdir zipfile
 download_url=$1
 workdir=$2
 zipfile=$3
-command="$pkgname self create"
 sudo mkdir -p "$workdir"
 sudo chmod -R 777 "$workdir"
 trap 'sudo rm -rf $workdir' EXIT
 sudo curl -fsSL "$download_url" -o "$zipfile"
-sudo unzip -q "$zipfile" -d "$install_dir/"
+sudo unzip -q "$zipfile" -d "$install_dir"
 if [ -n "$chroot_dir" ];then
-command+=" --chroot $chroot_dir"
+sudo arch-chroot "$chroot_dir" /usr/bin/bash -c "curl -L $installer_url | sh -s -- -t $tag"
+else
+$pkgname self create
 fi
-$command
 }
 show_help(){
 cat <<EOF
@@ -298,7 +302,7 @@ $(bold Examples:)
 EOF
 }
 parse_args(){
-if [[ $* =~ -t|--tag ]];then
+if ! [[ $* =~ -t|--tag ]];then
 set -- "$@" --tag $tag
 fi
 while test $# -gt 0;do
@@ -312,7 +316,6 @@ install_dir="$2"
 shift
 ;;
 -c|--chroot)dir_exists "$2"||throw "Invalid chroot directory: $2" echo
-install_dir="$2$install_dir"
 chroot_dir="$2"
 shift
 ;;
@@ -340,6 +343,7 @@ need -b curl
 install_dependencies
 tag="latest"
 install_dir="/usr/local/bin"
+installer_url="https://sirius-red.github.io/aurbuilder/install"
 pkgname="aurbuilder"
 repo="sirius-red/$pkgname"
 file_ext="zip"
@@ -363,6 +367,9 @@ print "Version: $(blue_bold "$download_tag")"
 print "Repo: $(blue_bold $repo)"
 print "Download url: $(blue_bold "$download_url")"
 print "Install dir: $(blue_bold "$install_dir")"
+if [ -n "$chroot_dir" ];then
+print "Chroot dir: $(blue_bold "$chroot_dir")"
+fi
 print
 dry_run||install "$download_url" "$workdir" "$zipfile"
 [ -z "$rmdeps" ]||remove_dependencies --dev

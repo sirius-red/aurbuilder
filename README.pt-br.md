@@ -46,7 +46,7 @@ Caso esteja usando o aurbuilder para instalar pacotes na hora da instalação do
 
 ```bash
 # Substitua `/mnt` para o diretório onde você montou a partição root
-aurbuilder i --chroot /mnt <nome_do_pacote>
+aurbuilder --chroot /mnt install -y <nome_do_pacote>
 ```
 
 **Todas** as informações necessárias estão no comando de ajuda:

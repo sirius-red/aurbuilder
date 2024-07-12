@@ -10,5 +10,5 @@ else
 fi
 
 echo
-exit exit_code
+exit $exit_code
 

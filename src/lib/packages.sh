@@ -6,6 +6,16 @@ missing_dependencie() {
 	echo "Install with $(green_bold pacman) $(blue -S) $(magenta "$1")"
 }
 
+set_installer() {
+	if [ "$INSTALLER" = "yay" ]; then
+		if ! is_installed yay; then
+			INSTALLER="makepkg"
+		fi
+	else
+		INSTALLER="makepkg"
+	fi
+}
+
 install_with_makepkg() {
 	local options
 
@@ -53,21 +63,11 @@ install_packages() {
 	local packages install
 
 	packages=("$@")
-	install="install_with_yay"
+	install="install_with_${INSTALLER}"
 
 	mkdir -p "$BUILDDIR"
 	chown -R "${AB_USER_NAME}:${AB_USER_NAME}" "$BUILDDIR"
 	trap 'rm -rf "$BUILDDIR"' EXIT
-
-	if [ "$INSTALLER" = "yay" ]; then
-		is_installed yay || {
-			INSTALLER="makepkg"
-			install="install_with_makepkg"
-		}
-	else
-		INSTALLER="makepkg"
-		install="install_with_makepkg"
-	fi
 
 	$install "${packages[@]}"
 }

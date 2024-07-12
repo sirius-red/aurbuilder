@@ -1,5 +1,31 @@
 #!/usr/bin/env bash
 
+check_version() {
+	local version expected_version
+	version="${1#v}"
+
+	case "$ENV" in
+	development)
+		expected_version="${version//-dev/}-dev"
+		;;
+	production)
+		expected_version="${version//-dev/}"
+		;;
+	esac
+
+	if [[ "$version" != "$expected_version" ]]; then
+		error "Incompatible environment and version"
+		echo
+		echo "Environment: $(magenta_bold "$ENV")"
+		echo "Version defined: $(red_bold "$version")"
+		echo "Expected version: $(green_bold "$expected_version")"
+		echo
+		echo "$(bold "TIP:") Change the value of $(bold '"version"') to $(green_bold "$expected_version") in the file $(cyan_bold "$project_config_path")"
+		echo
+		exit 1
+	fi
+}
+
 make_bundle() {
 	local name version build_dir options
 	name=$1
@@ -11,6 +37,9 @@ make_bundle() {
 	dir_exists "$build_dir" && rm -rf "$build_dir"
 	mkdir -p "$build_dir"
 	bashly generate "${options[@]}"
+
+	sed -i "s/{{TAG}}/${version}/" "${build_dir}/${name}"
+	sed -i "s/{{INSTALLER_URL}}/${INSTALLER_URL}/" "${build_dir}/${name}"
 
 	if [ "$ENV" = "production" ]; then
 		shfmt --write --simplify --minify --language-dialect bash "${build_dir}/${name}"
@@ -27,6 +56,16 @@ make_release() {
 	dir_exists "$dist_dir" && rm -rf "$dist_dir"
 	mkdir -p "$dist_dir"
 	zip -9 -j "$dist_file" "$built_file"
+}
+
+make_docs() {
+	if ! dir_exists "$DOCS_DIR"; then
+		throw "Documentation directory does not exist: $(magenta_bold "$DOCS_DIR")" echo
+	fi
+
+	DOCS_TYPE=":${DOCS_TYPE}"
+
+	dry_run || bashly render "$DOCS_TYPE" "$DOCS_DIR"
 }
 
 install() {
@@ -90,6 +129,11 @@ $(bold Options:)
 	Environment to use
 	Allowed: $(yellow -S " | " development production)
 	Default: $(magenta development)
+
+  $(blue -S ", " "--docs") [$(yellow "<dir>")]
+	Generates updated documentation, if a directory is not passed, the default directory will be used
+	Default: $(magenta "$DOCS_DIR")
+	NOTE: This flag should only be used alone or together with --dry-run, any other flag will be ignored
 
   $(blue -S ", " "--install")
 	Install the built bundle. Required if using --installdir
@@ -156,6 +200,13 @@ parse_args() {
 			ENV=$2
 			shift
 			;;
+		--docs)
+			MAKE_DOCS=true
+			if dir_exists "$2"; then
+				DOCS_DIR="$2"
+				shift
+			fi
+			;;
 		--install)
 			to_install=true
 			;;
@@ -181,10 +232,6 @@ parse_args() {
 		esac
 		shift
 	done
-
-	if [ "$ENV" = "development" ]; then
-		env_version="-dev"
-	fi
 }
 
 init() {
@@ -202,7 +249,6 @@ init() {
 	# build options
 	settings_file='./settings.yml'
 	dist_ext='zip'
-	env_version=
 
 	# install options
 	to_install=
@@ -214,6 +260,10 @@ init() {
 
 	# environment variables
 	ENV=${ENV:-'development'}
+	MAKE_DOCS=
+	DOCS_TYPE="markdown" # markdown | mandoc
+	DOCS_DIR="docs/docs"
+	INSTALLER_URL="https:\/\/sirius-red.github.io\/aurbuilder\/install"
 
 	parse_args "$@"
 }
@@ -221,11 +271,20 @@ init() {
 run() {
 	local settings_info project_info name version build_dir built_file dist_dir dist_file bashly_options
 
+	if [ "$MAKE_DOCS" = true ]; then
+		make_docs
+		exit
+	fi
+
 	settings_info=$(tr -d '"' <"$settings_file")
-	project_info=$(tr -d '"' <"$(extract_value "$settings_info" "config_path:" " ")")
+	project_config_path=$(extract_value "$settings_info" "config_path:" " ")
+	project_info=$(tr -d '"' <"$project_config_path")
 
 	name=$(extract_value "$project_info" "name:" " ")
-	version="v$(extract_value "$project_info" "version:" " ")${env_version}"
+	version="v$(extract_value "$project_info" "version:" " ")"
+
+	check_version "$version"
+
 	build_dir=$(extract_value "$settings_info" "target_dir:" " ")
 	built_file="${build_dir}/${name}"
 	dist_dir="${build_dir}/dist"
@@ -242,7 +301,7 @@ run() {
 	print "Environment: $(cyan_bold "$(upper "$ENV")")"
 
 	print
-	print "Building $(green_bold "$name (v${version})") $ENV bundle..."
+	print "Building $(green_bold "$name (${version})") $ENV bundle..."
 	print "Built file: $(blue_bold "$built_file")"
 	print "Options: $(blue_bold "${bashly_options[*]}")"
 	print
@@ -250,7 +309,7 @@ run() {
 	dry_run || make_bundle "$name" "$version" "$build_dir" "${bashly_options[@]}"
 
 	print
-	print "Making release for $(green_bold "$name (v${version})")..."
+	print "Making release for $(green_bold "$name (${version})")..."
 	print "Built file: $(blue_bold "$built_file")"
 	print "Dist file: $(blue_bold "$dist_file")"
 	print
@@ -262,7 +321,7 @@ run() {
 		noconfirm || confirm "Proceed with installation?" || exit
 
 		print
-		print "Installing $(green_bold "$name (v${version})") release..."
+		print "Installing $(green_bold "$name (${version})") release..."
 		print "Install directory: $(blue_bold "$install_dir")"
 		print
 

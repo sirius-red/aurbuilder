@@ -48,7 +48,7 @@ If you are using aurbuilder to install packages when installing Arch:
 
 ```bash
 # Replace `/mnt` to the directory where you mounted the root partition
-aurbuilder i --chroot /mnt <package_name>
+aurbuilder --chroot /mnt install -y <package_name>
 ```
 
 **All** necessary information is in the help command:

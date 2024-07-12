@@ -1,4 +1,4 @@
-# AUR Builder
+# About
 
 Installing packages from the AUR when logged in as root on arch linux is sometimes a mess, especially if you are trying to do it when installing the system, whether manually or with a script. I created AUR Builder with the motivation of solving this problem, since for all the installations I do of arch, I create a script for them, and having to add some packages manually after installation is really annoying, the option beyond this installation system post-installation manual would be to add the code from this repository to my installation scripts, so I found it more practical to create a separate package for this.
 
@@ -43,7 +43,7 @@ If you are using aurbuilder to install packages when installing Arch:
 
 ```bash
 # Replace `/mnt` to the directory where you mounted the root partition
-aurbuilder i --chroot /mnt <package_name>
+aurbuilder --chroot /mnt install -y <package_name>
 ```
 
 **All** necessary information is in the help command:
