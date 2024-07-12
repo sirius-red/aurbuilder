@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
 
 
+INSTALLER_URL="{{INSTALLER_URL}}"
+TAG="{{TAG}}"
+
+INSTALLER_COMMAND=$(cat <<EOF
+if ! command -v aurbuilder &>/dev/null; then
+	curl -L "${INSTALLER_URL}" | sh -s -- -t "${TAG}"
+fi
+EOF
+)
+
 parse_permissions() {
 	set_environment_vars() {
-		export TAG AB_USER_NAME AB_USER_ID CHROOT
+		export AB_USER_NAME AB_USER_ID CHROOT
 
-		TAG="{{TAG}}"
 		AB_USER_NAME="${AB_USER_NAME:-aurbuilder}"
 		AB_USER_ID=$(id -u "$AB_USER_NAME" 2>/dev/null)
 		CHROOT="${CHROOT:-"/"}"
@@ -20,7 +29,7 @@ parse_permissions() {
 	}
 
 	install_aurbuilder_on_chroot() {
-		sudo arch-chroot "$CHROOT" /usr/bin/bash -c "command -v aurbuilder &>/dev/null || curl -L https://sirius-red.github.io/aurbuilder/install | sh -s -- -t ${TAG}"
+		sudo arch-chroot "$CHROOT" /usr/bin/bash -c "$INSTALLER_COMMAND"
 	}
 
 	arch_chroot() {
@@ -47,12 +56,12 @@ parse_permissions() {
 	}
 
 	exec_as_aurbuilder() {
-		if [[ "$UID" -ne "$AB_USER_ID" ]]; then
-			if [ "$CHROOT" = "/" ]; then
+		if [ "$CHROOT" = "/" ]; then
+			if [[ "$UID" -ne "$AB_USER_ID" ]]; then
 				exec sudo -u "$AB_USER_NAME" "$0" "$@"
-			else
-				arch_chroot as_aurbuilder "$0" "$@"
 			fi
+		else
+			arch_chroot as_aurbuilder "$0" "$@"
 		fi
 	}
 
