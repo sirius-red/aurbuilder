@@ -5,7 +5,7 @@ parse_permissions() {
 	set_environment_vars() {
 		export TAG AB_USER_NAME AB_USER_ID CHROOT
 
-		TAG="v$($0 -v)"
+		TAG="{{TAG}}"
 		AB_USER_NAME="${AB_USER_NAME:-aurbuilder}"
 		AB_USER_ID=$(id -u "$AB_USER_NAME" 2>/dev/null)
 		CHROOT="${CHROOT:-"/"}"

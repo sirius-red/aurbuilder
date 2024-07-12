@@ -38,6 +38,8 @@ make_bundle() {
 	mkdir -p "$build_dir"
 	bashly generate "${options[@]}"
 
+	sed -i "s/TAG=\"{{TAG}}\"/TAG=\"${version}\"/" "${build_dir}/${name}"
+
 	if [ "$ENV" = "production" ]; then
 		shfmt --write --simplify --minify --language-dialect bash "${build_dir}/${name}"
 	fi
@@ -275,7 +277,7 @@ run() {
 	dry_run || make_bundle "$name" "$version" "$build_dir" "${bashly_options[@]}"
 
 	print
-	print "Making release for $(green_bold "$name (v${version})")..."
+	print "Making release for $(green_bold "$name (${version})")..."
 	print "Built file: $(blue_bold "$built_file")"
 	print "Dist file: $(blue_bold "$dist_file")"
 	print
@@ -287,7 +289,7 @@ run() {
 		noconfirm || confirm "Proceed with installation?" || exit
 
 		print
-		print "Installing $(green_bold "$name (v${version})") release..."
+		print "Installing $(green_bold "$name (${version})") release..."
 		print "Install directory: $(blue_bold "$install_dir")"
 		print
 
