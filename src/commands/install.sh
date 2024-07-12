@@ -6,6 +6,8 @@
 # used to convert the space separated packages to an array
 eval "PACKAGES=(${args[package]:-})"
 
+set_installer
+
 echo
 echo "$AB_TITLE installer"
 echo
