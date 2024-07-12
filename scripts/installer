@@ -160,7 +160,7 @@ init() {
 	install_dir="/usr/local/bin"
 
 	# internal use
-	installer_url="https://github.com/sirius-red/aurbuilder/raw/dev/docs/install"
+	installer_url="https://sirius-red.github.io/aurbuilder/install"
 	pkgname="aurbuilder"
 	repo="sirius-red/${pkgname}"
 	file_ext="zip"

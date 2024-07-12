@@ -123,6 +123,9 @@ print(){
 upper(){
 printf '%s' "${1^^}"
 }
+warn(){
+yellow_bold "[WARNING] $*" >&1
+}
 error(){
 red_bold "[ERROR] $*" >&2
 }
@@ -340,7 +343,7 @@ need -b curl
 install_dependencies
 tag="latest"
 install_dir="/usr/local/bin"
-installer_url="https://github.com/sirius-red/aurbuilder/raw/dev/docs/install"
+installer_url="https://sirius-red.github.io/aurbuilder/install"
 pkgname="aurbuilder"
 repo="sirius-red/$pkgname"
 file_ext="zip"
