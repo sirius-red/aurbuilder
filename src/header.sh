@@ -44,7 +44,7 @@ parse_permissions() {
 			shift 1
 			command="$(printf "%q " "$@")"
 			install_aurbuilder_on_chroot
-			exec sudo arch-chroot -u "$AB_USER_NAME" "$CHROOT" /usr/bin/bash -c "$command"
+			exec sudo arch-chroot -u "$AB_USER_NAME" "$CHROOT" /usr/bin/bash -c "sudo -Hu ${AB_USER_NAME} $command"
 		else
 			command="$(printf "%q " "$@")"
 			exec sudo arch-chroot "$CHROOT" /usr/bin/bash -c "$command"
@@ -63,7 +63,7 @@ parse_permissions() {
 	exec_as_aurbuilder() {
 		if [ "$CHROOT" = "/" ]; then
 			if [[ "$UID" -ne "$AB_USER_ID" ]]; then
-				exec sudo -u "$AB_USER_NAME" "$0" "$@"
+				exec sudo -Hu "$AB_USER_NAME" "$0" "$@"
 			fi
 		else
 			arch_chroot as_aurbuilder "$0" "$@"
